@@ -1,0 +1,96 @@
+<svg 
+id="Capa_1" 
+enable-background="new 0 0 2048 2048" 
+height="2048" viewBox="0 0 2048 2048" 
+width="2048" 
+xmlns="http://www.w3.org/2000/svg">
+
+<linearGradient 
+	id="SVGID_1_" 
+	gradientUnits="userSpaceOnUse" 
+	x1="1265" 
+	y1="90" 
+	x2="1355" 
+	y2="90" 
+	gradientTransform="matrix(1 0 0 -1 0.0775 515)">
+	<stop  offset="0" style="stop-color:#2AF598"/>
+	<stop  offset="1" style="stop-color:#009EFD"/>
+</linearGradient>
+
+
+
+<path 
+	style="fill:url(#SVGID_1_);" 
+	d="
+	M1265,130
+	l45-80
+	h90
+	l45,80
+	l-45,80
+	H1310
+	L1265,130
+	z"
+/>
+	
+
+<polygon 
+	style="fill:#61CCCC;" 
+	points="600,230 365,320 135,230 365,130 "
+	/>
+
+<polygon 
+	style="fill:#EFC062;" 
+	points="365,320 370,600 135,505 135,230 "
+/>
+
+<polygon 
+	style="fill:#EA7E73;" 
+	points="600,230 600,505 370,600 365,320 "
+/>
+
+<g id="M">
+<path 
+d="
+M0 150 0 150
+m320 512
+v-400
+h145
+v-110
+h-420
+v110
+h145
+v400
+z
+
+M610 150 540 150
+m130 240 65 270
+h115
+l65-270
+v270
+h120
+v-512
+h-170
+l-70 285-70-285
+h-170
+v512
+h120
+z
+
+M1150 150 1100 150
+m130 240 65 270
+h115
+l65-270
+v270
+h120
+v-512
+h-170
+l-70 285-70-285
+h-170
+v512
+h120
+z
+"/>
+
+
+</g>
+</svg>
