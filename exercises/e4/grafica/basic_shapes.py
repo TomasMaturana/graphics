@@ -163,6 +163,26 @@ def createTextureQuad(xi, xf, yi, yf):
     return Shape(vertices, indices)
 ##################################################################################
 
+###############################################################################
+def createTextureQuadXY(x, y, xi, xf, yi, yf):
+
+    # Defining locations and texture coordinates for each vertex of the shape    
+    vertices = [
+    #   positions        texture
+        -x, -y, 0.0, xi, yf,
+         x, -y, 0.0, xf, yf,
+         x,  y, 0.0, xf, yi,
+        -x,  y, 0.0, xi, yi]
+
+    # Defining connections among vertices
+    # We have a triangle every 3 indices specified
+    indices = [
+         0, 1, 2,
+         2, 3, 0]
+
+    return Shape(vertices, indices)
+##################################################################################
+
 def createRainbowCircle(N):
 
     # First vertex at the center, white color

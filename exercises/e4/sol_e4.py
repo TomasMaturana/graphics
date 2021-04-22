@@ -49,11 +49,11 @@ def on_key(window, key, scancode, action, mods):
 #############################################################################################
     # Agregamos dos nuevas teclas para interactuar
     elif key == glfw.KEY_RIGHT:
-        controller.x += 0.05
+        controller.x -= 0.05
         controller.actual_sprite = (controller.actual_sprite + 1)%10
     
     elif key == glfw.KEY_LEFT:
-        controller.x -= 0.05
+        controller.x += 0.05
         controller.actual_sprite = (controller.actual_sprite - 1)%10
 #############################################################################################
 
@@ -69,7 +69,7 @@ if __name__ == "__main__":
     width = 600
     height = 600
 
-    window = glfw.create_window(width, height, "Boo!", None, None)
+    window = glfw.create_window(width, height, "Rain_Knight", None, None)
 
     if not window:
         glfw.terminate()
@@ -106,9 +106,13 @@ if __name__ == "__main__":
     thisFolderPath = os.path.dirname(thisFilePath)
     spritesDirectory = os.path.join(thisFolderPath, "Sprites")
     spritePath = os.path.join(spritesDirectory, "sprites.png")
+    backgroundPath = os.path.join(spritesDirectory, "background.png")
 
     texture = es.textureSimpleSetup(
             spritePath, GL_CLAMP_TO_EDGE, GL_CLAMP_TO_EDGE, GL_NEAREST, GL_NEAREST)
+
+    backgroundTex = es.textureSimpleSetup(
+            backgroundPath, GL_REPEAT, GL_REPEAT, GL_NEAREST, GL_NEAREST)
 
     # Creamos una gpushape por cada frame de textura
     for i in range(10):
@@ -122,6 +126,17 @@ if __name__ == "__main__":
         gpuKnight.fillBuffers(shapeKnight.vertices, shapeKnight.indices, GL_STATIC_DRAW)
 
         gpus.append(gpuKnight)
+
+    gpuBackground = GPUShape().initBuffers()
+    pipeline.setupVAO(gpuBackground)
+
+    shapeBackground = bs.createTextureQuadXY(200,1,0,100,0,1)
+
+    gpuBackground.texture = backgroundTex
+
+    gpuBackground.fillBuffers(shapeBackground.vertices, shapeBackground.indices, GL_STATIC_DRAW)
+
+    #gpus.append(gpuBackground)
 
 #######################################################################################################    
 
@@ -144,10 +159,16 @@ if __name__ == "__main__":
         # Le entregamos al vertex shader la matriz de transformación
         glUniformMatrix4fv(glGetUniformLocation(pipeline.shaderProgram, "transform"), 1, GL_TRUE, tr.matmul([
             tr.translate(controller.x, 0, 0),
-            tr.uniformScale(0.5)
+            tr.scale(1, 1, 0)
         ]))
 
         # Dibujamos la figura
+        pipeline.drawCall(gpuBackground)
+
+        glUniformMatrix4fv(glGetUniformLocation(pipeline.shaderProgram, "transform"), 1, GL_TRUE, tr.matmul([
+            tr.translate(0, -0.3, 0),
+            tr.scale(0.5, 0.5, 0)
+        ]))
         pipeline.drawCall(gpus[controller.actual_sprite])
         
 ##############################################################################################################################
@@ -157,5 +178,6 @@ if __name__ == "__main__":
 
     # freeing GPU memory
     gpuKnight.clear()
+    gpuBackground.clear()
 
     glfw.terminate()
