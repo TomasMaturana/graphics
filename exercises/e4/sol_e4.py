@@ -23,9 +23,11 @@ class Controller:
         self.fillPolygon = True
 
 ###################################################################################################
-        # Agregamos dos nuevas variables a nuestro controlador
         self.actual_sprite = 1
-        self.x = 0.0
+        self.x = -4.0
+        self.x2 = 0.0
+        self.snowY = 2.0
+        self.snowY2 = 0.0
 ###################################################################################################
 
 
@@ -50,10 +52,12 @@ def on_key(window, key, scancode, action, mods):
     # Agregamos dos nuevas teclas para interactuar
     elif key == glfw.KEY_RIGHT:
         controller.x -= 0.05
+        controller.x2 -= 0.05
         controller.actual_sprite = (controller.actual_sprite + 1)%10
     
     elif key == glfw.KEY_LEFT:
         controller.x += 0.05
+        controller.x2 += 0.05
         controller.actual_sprite = (controller.actual_sprite - 1)%10
 #############################################################################################
 
@@ -107,14 +111,19 @@ if __name__ == "__main__":
     spritesDirectory = os.path.join(thisFolderPath, "Sprites")
     spritePath = os.path.join(spritesDirectory, "sprites.png")
     backgroundPath = os.path.join(spritesDirectory, "background.png")
+    snowPath = os.path.join(spritesDirectory, "snow2.png")
 
     texture = es.textureSimpleSetup(
             spritePath, GL_CLAMP_TO_EDGE, GL_CLAMP_TO_EDGE, GL_NEAREST, GL_NEAREST)
 
     backgroundTex = es.textureSimpleSetup(
-            backgroundPath, GL_REPEAT, GL_REPEAT, GL_NEAREST, GL_NEAREST)
+            backgroundPath, GL_REPEAT, GL_REPEAT, GL_LINEAR, GL_LINEAR)
+
+    snowTex = es.textureSimpleSetup(
+            snowPath, GL_REPEAT, GL_REPEAT, GL_NEAREST, GL_NEAREST)
 
     # Creamos una gpushape por cada frame de textura
+    ###knight
     for i in range(10):
         gpuKnight = GPUShape().initBuffers()
         pipeline.setupVAO(gpuKnight)
@@ -127,16 +136,26 @@ if __name__ == "__main__":
 
         gpus.append(gpuKnight)
 
+    ###background
     gpuBackground = GPUShape().initBuffers()
     pipeline.setupVAO(gpuBackground)
 
-    shapeBackground = bs.createTextureQuadXY(200,1,0,100,0,1)
+    shapeBackground = bs.createTextureQuadXY(2,1,0,1,0,1)
 
     gpuBackground.texture = backgroundTex
 
     gpuBackground.fillBuffers(shapeBackground.vertices, shapeBackground.indices, GL_STATIC_DRAW)
 
-    #gpus.append(gpuBackground)
+    ####snow
+    gpuSnow = GPUShape().initBuffers()
+    pipeline.setupVAO(gpuSnow)
+
+    shapeSnow = bs.createTextureQuadXY(3,1,0,3,0,1)
+
+    gpuSnow.texture = snowTex
+
+    gpuSnow.fillBuffers(shapeSnow.vertices, shapeSnow.indices, GL_STATIC_DRAW)
+
 
 #######################################################################################################    
 
@@ -156,6 +175,17 @@ if __name__ == "__main__":
 
 ##############################################################################################################################
 
+        ##background
+        if (controller.x<-4.0):
+            controller.x=3.95
+        elif (controller.x>4.0):
+            controller.x=-3.95
+
+        if (controller.x2>4.0):
+            controller.x2=-3.95
+        elif (controller.x2<-4.0):
+            controller.x2=3.95
+
         # Le entregamos al vertex shader la matriz de transformación
         glUniformMatrix4fv(glGetUniformLocation(pipeline.shaderProgram, "transform"), 1, GL_TRUE, tr.matmul([
             tr.translate(controller.x, 0, 0),
@@ -164,6 +194,58 @@ if __name__ == "__main__":
 
         # Dibujamos la figura
         pipeline.drawCall(gpuBackground)
+
+        # Le entregamos al vertex shader la matriz de transformación
+        glUniformMatrix4fv(glGetUniformLocation(pipeline.shaderProgram, "transform"), 1, GL_TRUE, tr.matmul([
+            tr.translate(controller.x2, 0, 0),
+            tr.scale(1, 1, 0)
+        ]))
+
+        # Dibujamos la figura
+        pipeline.drawCall(gpuBackground)
+
+        ##snow
+        if (controller.snowY>=-2.0):
+            controller.snowY-=0.0001
+        else:
+            controller.snowY=2.0
+
+        if (controller.snowY2>=-2.0):
+            controller.snowY2-=0.0001
+        else:
+            controller.snowY2=2.0
+
+        glUniformMatrix4fv(glGetUniformLocation(pipeline.shaderProgram, "transform"), 1, GL_TRUE, tr.matmul([
+            tr.translate(controller.x, controller.snowY, 0),
+            tr.scale(1, 1, 0)
+        ]))
+
+        # Dibujamos la figura
+        pipeline.drawCall(gpuSnow)
+
+        glUniformMatrix4fv(glGetUniformLocation(pipeline.shaderProgram, "transform"), 1, GL_TRUE, tr.matmul([
+            tr.translate(controller.x, controller.snowY2, 0),
+            tr.scale(1, 1, 0)
+        ]))
+
+        # Dibujamos la figura
+        pipeline.drawCall(gpuSnow)
+
+        glUniformMatrix4fv(glGetUniformLocation(pipeline.shaderProgram, "transform"), 1, GL_TRUE, tr.matmul([
+            tr.translate(controller.x2, controller.snowY, 0),
+            tr.scale(1, 1, 0)
+        ]))
+
+        # Dibujamos la figura
+        pipeline.drawCall(gpuSnow)
+
+        glUniformMatrix4fv(glGetUniformLocation(pipeline.shaderProgram, "transform"), 1, GL_TRUE, tr.matmul([
+            tr.translate(controller.x2, controller.snowY2, 0),
+            tr.scale(1, 1, 0)
+        ]))
+
+        # Dibujamos la figura
+        pipeline.drawCall(gpuSnow)
 
         glUniformMatrix4fv(glGetUniformLocation(pipeline.shaderProgram, "transform"), 1, GL_TRUE, tr.matmul([
             tr.translate(0, -0.3, 0),
