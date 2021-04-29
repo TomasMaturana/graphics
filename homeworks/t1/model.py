@@ -7,16 +7,27 @@ import grafica.transformations as tr
 class Player():
     # Clase que contiene al modelo del player / auro
     def __init__(self, size):
-        self.pos = [0,-0.65] # Posicion en el escenario
+        self.pos = [0,0] # Posicion en el escenario
         self.vel = [1,1] # Velocidad de desplazamiento
         self.model = None # Referencia al grafo de escena asociado
         self.controller = None # Referencia del controlador, para acceder a sus variables
         self.size = size # Escala a aplicar al nodo 
         self.radio = 0.1 # distancia para realiozar los calculos de colision
+        self.actual_sprite = [1, 1, 1, 1]  # sprint number --> [up, down, right, left]
+        # self.actual_spriteR = 1 #actual sprite of player (right)
+        # self.actual_spriteL = 1 #actual sprite of player (left)
+        # self.actual_spriteU = 1 #actual sprite of player (up)
+        # self.actual_spriteD = 1 #actual sprite of player (down)
+        self.sprite = None
+        self.actual_direction = 0 # 0:down  1:up  2:right  3:left
 
-    def set_model(self, new_model):
+    def set_model(self, new_model, sprite=None):
         # Se obtiene una referencia a uno nodo
         self.model = new_model
+        # if we use sprite, model will actualice after
+        if(sprite):
+            self.sprite=sprite
+            
 
     def set_controller(self, new_controller):
         # Se obtiene la referncia al controller
@@ -28,18 +39,27 @@ class Player():
         # Si detecta la tecla [D] presionada se mueve hacia la derecha
         if self.controller.is_d_pressed and self.pos[0] < 0.8:
             self.pos[0] += self.vel[0] * delta
+            self.actual_sprite[2]=(self.actual_sprite[2] + 1)%7
+            self.actual_direction = 2
         # Si detecta la tecla [A] presionada se mueve hacia la izquierda
         if self.controller.is_a_pressed and self.pos[0] > -0.8:
             self.pos[0] -= self.vel[0] * delta
+            self.actual_sprite[3]=(self.actual_sprite[3] + 1)%7
+            self.actual_direction = 3
         # Si detecta la tecla [W] presionada y no se ha salido de la pista se mueve hacia arriba
-        if self.controller.is_w_pressed and self.pos[1] < 0.99:
+        if self.controller.is_w_pressed and self.pos[1] < 0.8:
             self.pos[1] += self.vel[1] * delta
+            self.actual_sprite[1]=(self.actual_sprite[1] + 1)%7
+            self.actual_direction = 1
         # Si detecta la tecla [S] presionada y no se ha salido de la pista se mueve hacia abajo
-        if self.controller.is_s_pressed and self.pos[1] > -0.99:
+        if self.controller.is_s_pressed and self.pos[1] > -0.8:
             self.pos[1] -= self.vel[1] * delta
+            self.actual_sprite[0]=(self.actual_sprite[0] + 1)%7
+            self.actual_direction = 0
         #print(self.pos[0], self.pos[1])
 
         # Se le aplica la transformacion de traslado segun la posicion actual
+        self.model.childs= [self.sprite[self.actual_direction][self.actual_sprite[self.actual_direction]]]
         self.model.transform = tr.matmul([tr.translate(self.pos[0], self.pos[1], 0), tr.scale(self.size, self.size, 1)])
 
     def collision(self, cargas):

@@ -111,17 +111,26 @@ if __name__ == "__main__":
     glEnable(GL_BLEND)
     glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA)
 
+
+
+
+
     # Grafo de escena del auto
-    car = createCar(pipeline) 
+    #car = createCar(pipeline) 
+    player_shapes= createPlayerShape(bs.createTextureQuad(1,1), tex_pipeline, "sprites/hinata.png", 7, 4)
+    playerNode = sg.SceneGraphNode("hinata")
+    #playerNode.childs = [player_shapes[1][1]]
     # Grafo de escena del background
     mainScene = createScene(pipeline)
     # Se añade el auto a la escena principal
-    mainScene.childs += [car]
+    #mainScene.childs += [car]
+    #mainScene.childs += [playerNode]
 
     # Se instancia el modelo del auto
-    player = Player(0.3)
+    player = Player(0.2)
     # Se indican las referencias del nodo y el controller al modelo
-    player.set_model(car)
+    #player.set_model(car)
+    player.set_model(playerNode, player_shapes)
     player.set_controller(controller)
 
     # Shape con textura de la carga
@@ -136,7 +145,7 @@ if __name__ == "__main__":
 
     # Se crean el grafo de escena con textura y se agregan las cargas
     tex_scene = sg.SceneGraphNode("textureScene")
-    tex_scene.childs = [garbage1Node, garbage2Node]
+    tex_scene.childs = [garbage1Node, garbage2Node, playerNode]
 
     # Se crean los modelos de la carga, se indican su nodo y se actualiza la posicion fija
     carga1 = Carga(0.2, -0.55, 0.1)

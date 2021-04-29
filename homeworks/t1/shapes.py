@@ -69,63 +69,25 @@ def createColorCircle(N, r, g, b):
 
     return bs.Shape(vertices, indices)
 
-# def evalMixCurve(N):
-#     # Funcion para generar N puntos entre 0 y 1 de una curva personalizada
-#     # Hermite + Bezier para modelar la superficie de un auto
+def createPlayerShape(shape, pipeline, path, ximgs, yimgs):
+    # Creamos una lista para guardar todas las gpu shapes necesarias
+    shapes = []
+    # Creamos una gpushape por cada frame de textura
+    for j in range(yimgs):
+        shapesY = []
+        for i in range(ximgs):
+            gpuPlayer = es.GPUShape().initBuffers()
+            pipeline.setupVAO(gpuPlayer)
 
-#     # Puntos de Control
-#     P0 = np.array([[0.07, 0.14, 0]]).T
-#     P1 = np.array([[0.27, -0.04, 0]]).T
-#     P2 = np.array([[0.42, 0.06, 0]]).T
-#     P3 = np.array([[0.5, -0.06, 0]]).T
-#     P4 = np.array([[-0.5, -0.06, 0]]).T
-#     T0 = np.array([[-0.13, 0.35, 0]]).T
-#     alpha = 1
-#     T1 = 3 * alpha * (P1 - P0)
-#     # Matrices de Hermite y Beziers
-#     H_M = cv.hermiteMatrix(P4, P0, T0, T1)
-#     B_M = cv.bezierMatrix(P0, P1, P2, P3)
+            shapePlayer = bs.createTextureQuad2(i/ximgs, (i + 1)/ximgs, j/yimgs,(j + 1)/yimgs)
 
-#     # Arreglo de numeros entre 0 y 1
-#     ts = np.linspace(0.0, 1.0, N//2)
-#     offset = N//2 
-    
-#     # The computed value in R3 for each sample will be stored here
-#     curve = np.ndarray(shape=(len(ts) * 2, 3), dtype=float)
-    
-#     # Se llenan los puntos de la curva
-#     for i in range(len(ts)):
-#         T = cv.generateT(ts[i])
-#         curve[i, 0:3] = np.matmul(H_M, T).T
-#         curve[i + offset, 0:3] = np.matmul(B_M, T).T
-        
-#     return curve
+            gpuPlayer.fillBuffers(shapePlayer.vertices, shapePlayer.indices, GL_STATIC_DRAW)
 
-# def createColorChasis(r, g, b):
-#     # Crea un shape del chasis de un auto a partir de una curva personalizada
-#     vertices = []
-#     indices = []
-#     curve = evalMixCurve(64) # Se obtienen los puntos de la curva
-#     delta = 1 / len(curve) # distancia del step /paso
-#     x_0 = -0.5 # Posicion x inicial de la recta inferior
-#     y_0 = -0.2 # Posicion y inicial de la recta inferior
-#     counter = 0 # Contador de vertices, para indicar los indices
+            gpuPlayer.texture = es.textureSimpleSetup(path, GL_CLAMP_TO_EDGE, GL_CLAMP_TO_EDGE, GL_NEAREST, GL_NEAREST)
 
-#     # Se generan los vertices
-#     for i in range(len(curve)-1):
-#         c_0 = curve[i] # punto i de la curva
-#         r_0 = [x_0 + i*delta, y_0] # punto i de la recta
-#         c_1 = curve[i + 1] # punto i + 1 de la curva
-#         r_1 = [x_0 + (i+1)*delta, y_0] # punto i + 1 de la recta
-#         vertices += [c_0[0], c_0[1], 0, r + 0.3, g + 0.3, b + 0.3]
-#         vertices += [r_0[0], r_0[1], 0, r, g, b]
-#         vertices += [c_1[0], c_1[1], 0, r + 0.3, g + 0.3, b + 0.3]
-#         vertices += [r_1[0], r_1[1], 0, r, g, b]
-#         indices += [counter + 0, counter +1, counter + 2]
-#         indices += [counter + 2, counter + 3, counter + 1]
-#         counter += 4
-
-#     return bs.Shape(vertices, indices)
+            shapesY.append(gpuPlayer)
+        shapes.append(shapesY)
+    return shapes
 
 
 # def createCar(pipeline):
@@ -221,11 +183,11 @@ def createScene(pipeline):
     # Funcion que crea la escena de la pregunta 2
 
     # Se crean las shapes en GPU
-    gpuGreenTriangle = createGPUShape(createColorTriangle(0.125, 0.705, 0.094), pipeline) # Shape del triangulo verde
-    gpuGrayQuad = createGPUShape(bs.createColorQuad(0.6, 0.6, 0.6), pipeline) # Shape del quad gris
-    gpuBrownTriangle = createGPUShape(createColorTriangle(0.592, 0.329, 0.090), pipeline) # Shape del triangulo cafe
-    gpuWhiteQuad = createGPUShape(bs.createColorQuad(1,1,1), pipeline) # Shape del quad blanco
-    gpuYellowCircle = createGPUShape(createColorCircle(20, 1, 1, 0), pipeline) # Shape del circulo amarillo
+    # gpuGreenTriangle = createGPUShape(createColorTriangle(0.125, 0.705, 0.094), pipeline) # Shape del triangulo verde
+    # gpuGrayQuad = createGPUShape(bs.createColorQuad(0.6, 0.6, 0.6), pipeline) # Shape del quad gris
+    # gpuBrownTriangle = createGPUShape(createColorTriangle(0.592, 0.329, 0.090), pipeline) # Shape del triangulo cafe
+    # gpuWhiteQuad = createGPUShape(bs.createColorQuad(1,1,1), pipeline) # Shape del quad blanco
+    # gpuYellowCircle = createGPUShape(createColorCircle(20, 1, 1, 0), pipeline) # Shape del circulo amarillo
     gpuBlueQuad =  createGPUShape(bs.createColorQuad(0.4, 0.972, 1), pipeline) # Shape del quad azul
 
     # Nodo del cielo, quad celeste escalado
