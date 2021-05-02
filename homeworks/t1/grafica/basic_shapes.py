@@ -123,6 +123,25 @@ def createColorQuad(r, g, b):
     return Shape(vertices, indices)
 
 
+def createColorQuadXY(r, g, b, x=1, y=1):
+
+    # Defining locations and colors for each vertex of the shape    
+    vertices = [
+    #   positions        colors
+        -x/2, -y/2, 0.0,  r, g, b,
+         x/2, -y/2, 0.0,  r, g, b,
+         x/2,  y/2, 0.0,  r, g, b,
+        -x/2,  y/2, 0.0,  r, g, b]
+
+    # Defining connections among vertices
+    # We have a triangle every 3 indices specified
+    indices = [
+         0, 1, 2,
+         2, 3, 0]
+
+    return Shape(vertices, indices)
+
+
 def createTextureQuad(nx, ny):
 
     # Defining locations and texture coordinates for each vertex of the shape    
@@ -142,15 +161,15 @@ def createTextureQuad(nx, ny):
     return Shape(vertices, indices)
 
 
-def createTextureQuad2(xi, xf, yi, yf):
+def createTextureQuadXY(x, y, xi, xf, yi, yf):
 
     # Defining locations and texture coordinates for each vertex of the shape    
     vertices = [
     #   positions        texture
-        -0.5, -0.5, 0.0, xi, yf,
-         0.5, -0.5, 0.0, xf, yf,
-         0.5,  0.5, 0.0, xf, yi,
-        -0.5,  0.5, 0.0, xi, yi]
+        -x, -y, 0.0, xi, yf,
+         x, -y, 0.0, xf, yf,
+         x,  y, 0.0, xf, yi,
+        -x,  y, 0.0, xi, yi]
 
     # Defining connections among vertices
     # We have a triangle every 3 indices specified
@@ -188,248 +207,248 @@ def createRainbowCircle(N):
     return Shape(vertices, indices)
 
 
-def createRainbowCube():
+# def createRainbowCube():
 
-    # Defining the location and colors of each vertex  of the shape
-    vertices = [
-    #    positions         colors
-        -0.5, -0.5,  0.5,  1.0, 0.0, 0.0,
-         0.5, -0.5,  0.5,  0.0, 1.0, 0.0,
-         0.5,  0.5,  0.5,  0.0, 0.0, 1.0,
-        -0.5,  0.5,  0.5,  1.0, 1.0, 1.0,
+#     # Defining the location and colors of each vertex  of the shape
+#     vertices = [
+#     #    positions         colors
+#         -0.5, -0.5,  0.5,  1.0, 0.0, 0.0,
+#          0.5, -0.5,  0.5,  0.0, 1.0, 0.0,
+#          0.5,  0.5,  0.5,  0.0, 0.0, 1.0,
+#         -0.5,  0.5,  0.5,  1.0, 1.0, 1.0,
  
-        -0.5, -0.5, -0.5,  1.0, 1.0, 0.0,
-         0.5, -0.5, -0.5,  0.0, 1.0, 1.0,
-         0.5,  0.5, -0.5,  1.0, 0.0, 1.0,
-        -0.5,  0.5, -0.5,  1.0, 1.0, 1.0]
+#         -0.5, -0.5, -0.5,  1.0, 1.0, 0.0,
+#          0.5, -0.5, -0.5,  0.0, 1.0, 1.0,
+#          0.5,  0.5, -0.5,  1.0, 0.0, 1.0,
+#         -0.5,  0.5, -0.5,  1.0, 1.0, 1.0]
 
-    # Defining connections among vertices
-    # We have a triangle every 3 indices specified
-    indices = [
-         0, 1, 2, 2, 3, 0,
-         4, 5, 6, 6, 7, 4,
-         4, 5, 1, 1, 0, 4,
-         6, 7, 3, 3, 2, 6,
-         5, 6, 2, 2, 1, 5,
-         7, 4, 0, 0, 3, 7]
+#     # Defining connections among vertices
+#     # We have a triangle every 3 indices specified
+#     indices = [
+#          0, 1, 2, 2, 3, 0,
+#          4, 5, 6, 6, 7, 4,
+#          4, 5, 1, 1, 0, 4,
+#          6, 7, 3, 3, 2, 6,
+#          5, 6, 2, 2, 1, 5,
+#          7, 4, 0, 0, 3, 7]
 
-    return Shape(vertices, indices)
-
-
-def createColorCube(r, g, b):
-
-    # Defining the location and colors of each vertex  of the shape
-    vertices = [
-    #    positions        colors
-        -0.5, -0.5,  0.5, r, g, b,
-         0.5, -0.5,  0.5, r, g, b,
-         0.5,  0.5,  0.5, r, g, b,
-        -0.5,  0.5,  0.5, r, g, b,
-
-        -0.5, -0.5, -0.5, r, g, b,
-         0.5, -0.5, -0.5, r, g, b,
-         0.5,  0.5, -0.5, r, g, b,
-        -0.5,  0.5, -0.5, r, g, b]
-
-    # Defining connections among vertices
-    # We have a triangle every 3 indices specified
-    indices = [
-         0, 1, 2, 2, 3, 0,
-         4, 5, 6, 6, 7, 4,
-         4, 5, 1, 1, 0, 4,
-         6, 7, 3, 3, 2, 6,
-         5, 6, 2, 2, 1, 5,
-         7, 4, 0, 0, 3, 7]
-
-    return Shape(vertices, indices)
+#     return Shape(vertices, indices)
 
 
-def createTextureCube(image_filename):
+# def createColorCube(r, g, b):
 
-    # Defining locations and texture coordinates for each vertex of the shape  
-    vertices = [
-    #   positions         texture coordinates
-    # Z+
-        -0.5, -0.5,  0.5, 0, 1,
-         0.5, -0.5,  0.5, 1, 1,
-         0.5,  0.5,  0.5, 1, 0,
-        -0.5,  0.5,  0.5, 0, 0,
+#     # Defining the location and colors of each vertex  of the shape
+#     vertices = [
+#     #    positions        colors
+#         -0.5, -0.5,  0.5, r, g, b,
+#          0.5, -0.5,  0.5, r, g, b,
+#          0.5,  0.5,  0.5, r, g, b,
+#         -0.5,  0.5,  0.5, r, g, b,
 
-    # Z-
-        -0.5, -0.5, -0.5, 0, 1,
-         0.5, -0.5, -0.5, 1, 1,
-         0.5,  0.5, -0.5, 1, 0,
-        -0.5,  0.5, -0.5, 0, 0,
+#         -0.5, -0.5, -0.5, r, g, b,
+#          0.5, -0.5, -0.5, r, g, b,
+#          0.5,  0.5, -0.5, r, g, b,
+#         -0.5,  0.5, -0.5, r, g, b]
+
+#     # Defining connections among vertices
+#     # We have a triangle every 3 indices specified
+#     indices = [
+#          0, 1, 2, 2, 3, 0,
+#          4, 5, 6, 6, 7, 4,
+#          4, 5, 1, 1, 0, 4,
+#          6, 7, 3, 3, 2, 6,
+#          5, 6, 2, 2, 1, 5,
+#          7, 4, 0, 0, 3, 7]
+
+#     return Shape(vertices, indices)
+
+
+# def createTextureCube(image_filename):
+
+#     # Defining locations and texture coordinates for each vertex of the shape  
+#     vertices = [
+#     #   positions         texture coordinates
+#     # Z+
+#         -0.5, -0.5,  0.5, 0, 1,
+#          0.5, -0.5,  0.5, 1, 1,
+#          0.5,  0.5,  0.5, 1, 0,
+#         -0.5,  0.5,  0.5, 0, 0,
+
+#     # Z-
+#         -0.5, -0.5, -0.5, 0, 1,
+#          0.5, -0.5, -0.5, 1, 1,
+#          0.5,  0.5, -0.5, 1, 0,
+#         -0.5,  0.5, -0.5, 0, 0,
         
-    # X+
-         0.5, -0.5, -0.5, 0, 1,
-         0.5,  0.5, -0.5, 1, 1,
-         0.5,  0.5,  0.5, 1, 0,
-         0.5, -0.5,  0.5, 0, 0
-,
+#     # X+
+#          0.5, -0.5, -0.5, 0, 1,
+#          0.5,  0.5, -0.5, 1, 1,
+#          0.5,  0.5,  0.5, 1, 0,
+#          0.5, -0.5,  0.5, 0, 0
+# ,
  
-    # X-
-        -0.5, -0.5, -0.5, 0, 1,
-        -0.5,  0.5, -0.5, 1, 1,
-        -0.5,  0.5,  0.5, 1, 0,
-        -0.5, -0.5,  0.5, 0, 0,
+#     # X-
+#         -0.5, -0.5, -0.5, 0, 1,
+#         -0.5,  0.5, -0.5, 1, 1,
+#         -0.5,  0.5,  0.5, 1, 0,
+#         -0.5, -0.5,  0.5, 0, 0,
 
-    # Y+
-        -0.5,  0.5, -0.5, 0, 1,
-         0.5,  0.5, -0.5, 1, 1,
-         0.5,  0.5,  0.5, 1, 0,
-        -0.5,  0.5,  0.5, 0, 0,
+#     # Y+
+#         -0.5,  0.5, -0.5, 0, 1,
+#          0.5,  0.5, -0.5, 1, 1,
+#          0.5,  0.5,  0.5, 1, 0,
+#         -0.5,  0.5,  0.5, 0, 0,
 
-    # Y-
-        -0.5, -0.5, -0.5, 0, 1,
-         0.5, -0.5, -0.5, 1, 1,
-         0.5, -0.5,  0.5, 1, 0,
-        -0.5, -0.5,  0.5, 0, 0
-        ]
+#     # Y-
+#         -0.5, -0.5, -0.5, 0, 1,
+#          0.5, -0.5, -0.5, 1, 1,
+#          0.5, -0.5,  0.5, 1, 0,
+#         -0.5, -0.5,  0.5, 0, 0
+#         ]
 
-    # Defining connections among vertices
-    # We have a triangle every 3 indices specified
-    indices = [
-          0, 1, 2, 2, 3, 0, # Z+
-          7, 6, 5, 5, 4, 7, # Z-
-          8, 9,10,10,11, 8, # X+
-         15,14,13,13,12,15, # X-
-         19,18,17,17,16,19, # Y+
-         20,21,22,22,23,20] # Y-
+#     # Defining connections among vertices
+#     # We have a triangle every 3 indices specified
+#     indices = [
+#           0, 1, 2, 2, 3, 0, # Z+
+#           7, 6, 5, 5, 4, 7, # Z-
+#           8, 9,10,10,11, 8, # X+
+#          15,14,13,13,12,15, # X-
+#          19,18,17,17,16,19, # Y+
+#          20,21,22,22,23,20] # Y-
 
-    return Shape(vertices, indices, image_filename)
-
-
-def createRainbowNormalsCube():
-
-    sq3 = 0.57735027
-
-    # Defining the location and colors of each vertex  of the shape
-    vertices = [
-            #    positions        colors          normals
-            -0.5, -0.5,  0.5, 1.0, 0.0, 0.0, -sq3, -sq3, sq3,
-             0.5, -0.5,  0.5, 0.0, 1.0, 0.0,  sq3, -sq3,  sq3,
-             0.5,  0.5,  0.5, 0.0, 0.0, 1.0,  sq3,  sq3,  sq3,
-            -0.5,  0.5,  0.5, 1.0, 1.0, 1.0, -sq3,  sq3,  sq3,
-
-            -0.5, -0.5, -0.5, 1.0, 1.0, 0.0, -sq3, -sq3, -sq3,
-             0.5, -0.5, -0.5, 0.0, 1.0, 1.0,  sq3, -sq3, -sq3,
-             0.5,  0.5, -0.5, 1.0, 0.0, 1.0,  sq3,  sq3, -sq3,
-            -0.5,  0.5, -0.5, 1.0, 1.0, 1.0, -sq3,  sq3, -sq3]
-
-    # Defining connections among vertices
-    # We have a triangle every 3 indices specified
-    indices = [0, 1, 2, 2, 3, 0,
-               4, 5, 6, 6, 7, 4,
-               4, 5, 1, 1, 0, 4,
-               6, 7, 3, 3, 2, 6,
-               5, 6, 2, 2, 1, 5,
-               7, 4, 0, 0, 3, 7]
-
-    return Shape(vertices, indices)
+#     return Shape(vertices, indices, image_filename)
 
 
-def createColorNormalsCube(r, g, b):
+# def createRainbowNormalsCube():
 
-    # Defining the location and colors of each vertex  of the shape
-    vertices = [
-    #   positions         colors   normals
-    # Z+
-        -0.5, -0.5,  0.5, r, g, b, 0,0,1,
-         0.5, -0.5,  0.5, r, g, b, 0,0,1,
-         0.5,  0.5,  0.5, r, g, b, 0,0,1,
-        -0.5,  0.5,  0.5, r, g, b, 0,0,1,
+#     sq3 = 0.57735027
 
-    # Z-
-        -0.5, -0.5, -0.5, r, g, b, 0,0,-1,
-         0.5, -0.5, -0.5, r, g, b, 0,0,-1,
-         0.5,  0.5, -0.5, r, g, b, 0,0,-1,
-        -0.5,  0.5, -0.5, r, g, b, 0,0,-1,
+#     # Defining the location and colors of each vertex  of the shape
+#     vertices = [
+#             #    positions        colors          normals
+#             -0.5, -0.5,  0.5, 1.0, 0.0, 0.0, -sq3, -sq3, sq3,
+#              0.5, -0.5,  0.5, 0.0, 1.0, 0.0,  sq3, -sq3,  sq3,
+#              0.5,  0.5,  0.5, 0.0, 0.0, 1.0,  sq3,  sq3,  sq3,
+#             -0.5,  0.5,  0.5, 1.0, 1.0, 1.0, -sq3,  sq3,  sq3,
+
+#             -0.5, -0.5, -0.5, 1.0, 1.0, 0.0, -sq3, -sq3, -sq3,
+#              0.5, -0.5, -0.5, 0.0, 1.0, 1.0,  sq3, -sq3, -sq3,
+#              0.5,  0.5, -0.5, 1.0, 0.0, 1.0,  sq3,  sq3, -sq3,
+#             -0.5,  0.5, -0.5, 1.0, 1.0, 1.0, -sq3,  sq3, -sq3]
+
+#     # Defining connections among vertices
+#     # We have a triangle every 3 indices specified
+#     indices = [0, 1, 2, 2, 3, 0,
+#                4, 5, 6, 6, 7, 4,
+#                4, 5, 1, 1, 0, 4,
+#                6, 7, 3, 3, 2, 6,
+#                5, 6, 2, 2, 1, 5,
+#                7, 4, 0, 0, 3, 7]
+
+#     return Shape(vertices, indices)
+
+
+# def createColorNormalsCube(r, g, b):
+
+#     # Defining the location and colors of each vertex  of the shape
+#     vertices = [
+#     #   positions         colors   normals
+#     # Z+
+#         -0.5, -0.5,  0.5, r, g, b, 0,0,1,
+#          0.5, -0.5,  0.5, r, g, b, 0,0,1,
+#          0.5,  0.5,  0.5, r, g, b, 0,0,1,
+#         -0.5,  0.5,  0.5, r, g, b, 0,0,1,
+
+#     # Z-
+#         -0.5, -0.5, -0.5, r, g, b, 0,0,-1,
+#          0.5, -0.5, -0.5, r, g, b, 0,0,-1,
+#          0.5,  0.5, -0.5, r, g, b, 0,0,-1,
+#         -0.5,  0.5, -0.5, r, g, b, 0,0,-1,
         
-    # X+
-        0.5, -0.5, -0.5, r, g, b, 1,0,0,
-        0.5,  0.5, -0.5, r, g, b, 1,0,0,
-        0.5,  0.5,  0.5, r, g, b, 1,0,0,
-        0.5, -0.5,  0.5, r, g, b, 1,0,0,
+#     # X+
+#         0.5, -0.5, -0.5, r, g, b, 1,0,0,
+#         0.5,  0.5, -0.5, r, g, b, 1,0,0,
+#         0.5,  0.5,  0.5, r, g, b, 1,0,0,
+#         0.5, -0.5,  0.5, r, g, b, 1,0,0,
  
-    # X-
-        -0.5, -0.5, -0.5, r, g, b, -1,0,0,
-        -0.5,  0.5, -0.5, r, g, b, -1,0,0,
-        -0.5,  0.5,  0.5, r, g, b, -1,0,0,
-        -0.5, -0.5,  0.5, r, g, b, -1,0,0,
+#     # X-
+#         -0.5, -0.5, -0.5, r, g, b, -1,0,0,
+#         -0.5,  0.5, -0.5, r, g, b, -1,0,0,
+#         -0.5,  0.5,  0.5, r, g, b, -1,0,0,
+#         -0.5, -0.5,  0.5, r, g, b, -1,0,0,
 
-    # Y+
-        -0.5, 0.5, -0.5, r, g, b, 0,1,0,
-         0.5, 0.5, -0.5, r, g, b, 0,1,0,
-         0.5, 0.5,  0.5, r, g, b, 0,1,0,
-        -0.5, 0.5,  0.5, r, g, b, 0,1,0,
+#     # Y+
+#         -0.5, 0.5, -0.5, r, g, b, 0,1,0,
+#          0.5, 0.5, -0.5, r, g, b, 0,1,0,
+#          0.5, 0.5,  0.5, r, g, b, 0,1,0,
+#         -0.5, 0.5,  0.5, r, g, b, 0,1,0,
 
-    # Y-
-        -0.5, -0.5, -0.5, r, g, b, 0,-1,0,
-         0.5, -0.5, -0.5, r, g, b, 0,-1,0,
-         0.5, -0.5,  0.5, r, g, b, 0,-1,0,
-        -0.5, -0.5,  0.5, r, g, b, 0,-1,0
-        ]
+#     # Y-
+#         -0.5, -0.5, -0.5, r, g, b, 0,-1,0,
+#          0.5, -0.5, -0.5, r, g, b, 0,-1,0,
+#          0.5, -0.5,  0.5, r, g, b, 0,-1,0,
+#         -0.5, -0.5,  0.5, r, g, b, 0,-1,0
+#         ]
 
-    # Defining connections among vertices
-    # We have a triangle every 3 indices specified
-    indices = [
-          0, 1, 2, 2, 3, 0, # Z+
-          7, 6, 5, 5, 4, 7, # Z-
-          8, 9,10,10,11, 8, # X+
-         15,14,13,13,12,15, # X-
-         19,18,17,17,16,19, # Y+
-         20,21,22,22,23,20] # Y-
+#     # Defining connections among vertices
+#     # We have a triangle every 3 indices specified
+#     indices = [
+#           0, 1, 2, 2, 3, 0, # Z+
+#           7, 6, 5, 5, 4, 7, # Z-
+#           8, 9,10,10,11, 8, # X+
+#          15,14,13,13,12,15, # X-
+#          19,18,17,17,16,19, # Y+
+#          20,21,22,22,23,20] # Y-
 
-    return Shape(vertices, indices)
+#     return Shape(vertices, indices)
 
 
-def createTextureNormalsCube(image_filename):
+# def createTextureNormalsCube(image_filename):
 
-    # Defining locations,texture coordinates and normals for each vertex of the shape  
-    vertices = [
-    #   positions            tex coords   normals
-    # Z+
-        -0.5, -0.5,  0.5,    0, 1,        0,0,1,
-         0.5, -0.5,  0.5,    1, 1,        0,0,1,
-         0.5,  0.5,  0.5,    1, 0,        0,0,1,
-        -0.5,  0.5,  0.5,    0, 0,        0,0,1,   
-    # Z-          
-        -0.5, -0.5, -0.5,    0, 1,        0,0,-1,
-         0.5, -0.5, -0.5,    1, 1,        0,0,-1,
-         0.5,  0.5, -0.5,    1, 0,        0,0,-1,
-        -0.5,  0.5, -0.5,    0, 0,        0,0,-1,
+#     # Defining locations,texture coordinates and normals for each vertex of the shape  
+#     vertices = [
+#     #   positions            tex coords   normals
+#     # Z+
+#         -0.5, -0.5,  0.5,    0, 1,        0,0,1,
+#          0.5, -0.5,  0.5,    1, 1,        0,0,1,
+#          0.5,  0.5,  0.5,    1, 0,        0,0,1,
+#         -0.5,  0.5,  0.5,    0, 0,        0,0,1,   
+#     # Z-          
+#         -0.5, -0.5, -0.5,    0, 1,        0,0,-1,
+#          0.5, -0.5, -0.5,    1, 1,        0,0,-1,
+#          0.5,  0.5, -0.5,    1, 0,        0,0,-1,
+#         -0.5,  0.5, -0.5,    0, 0,        0,0,-1,
        
-    # X+          
-         0.5, -0.5, -0.5,    0, 1,        1,0,0,
-         0.5,  0.5, -0.5,    1, 1,        1,0,0,
-         0.5,  0.5,  0.5,    1, 0,        1,0,0,
-         0.5, -0.5,  0.5,    0, 0,        1,0,0,   
-    # X-          
-        -0.5, -0.5, -0.5,    0, 1,        -1,0,0,
-        -0.5,  0.5, -0.5,    1, 1,        -1,0,0,
-        -0.5,  0.5,  0.5,    1, 0,        -1,0,0,
-        -0.5, -0.5,  0.5,    0, 0,        -1,0,0,   
-    # Y+          
-        -0.5,  0.5, -0.5,    0, 1,        0,1,0,
-         0.5,  0.5, -0.5,    1, 1,        0,1,0,
-         0.5,  0.5,  0.5,    1, 0,        0,1,0,
-        -0.5,  0.5,  0.5,    0, 0,        0,1,0,   
-    # Y-          
-        -0.5, -0.5, -0.5,    0, 1,        0,-1,0,
-         0.5, -0.5, -0.5,    1, 1,        0,-1,0,
-         0.5, -0.5,  0.5,    1, 0,        0,-1,0,
-        -0.5, -0.5,  0.5,    0, 0,        0,-1,0
-        ]   
+#     # X+          
+#          0.5, -0.5, -0.5,    0, 1,        1,0,0,
+#          0.5,  0.5, -0.5,    1, 1,        1,0,0,
+#          0.5,  0.5,  0.5,    1, 0,        1,0,0,
+#          0.5, -0.5,  0.5,    0, 0,        1,0,0,   
+#     # X-          
+#         -0.5, -0.5, -0.5,    0, 1,        -1,0,0,
+#         -0.5,  0.5, -0.5,    1, 1,        -1,0,0,
+#         -0.5,  0.5,  0.5,    1, 0,        -1,0,0,
+#         -0.5, -0.5,  0.5,    0, 0,        -1,0,0,   
+#     # Y+          
+#         -0.5,  0.5, -0.5,    0, 1,        0,1,0,
+#          0.5,  0.5, -0.5,    1, 1,        0,1,0,
+#          0.5,  0.5,  0.5,    1, 0,        0,1,0,
+#         -0.5,  0.5,  0.5,    0, 0,        0,1,0,   
+#     # Y-          
+#         -0.5, -0.5, -0.5,    0, 1,        0,-1,0,
+#          0.5, -0.5, -0.5,    1, 1,        0,-1,0,
+#          0.5, -0.5,  0.5,    1, 0,        0,-1,0,
+#         -0.5, -0.5,  0.5,    0, 0,        0,-1,0
+#         ]   
 
-    # Defining connections among vertices
-    # We have a triangle every 3 indices specified
-    indices = [
-          0, 1, 2, 2, 3, 0, # Z+
-          7, 6, 5, 5, 4, 7, # Z-
-          8, 9,10,10,11, 8, # X+
-         15,14,13,13,12,15, # X-
-         19,18,17,17,16,19, # Y+
-         20,21,22,22,23,20] # Y-
+#     # Defining connections among vertices
+#     # We have a triangle every 3 indices specified
+#     indices = [
+#           0, 1, 2, 2, 3, 0, # Z+
+#           7, 6, 5, 5, 4, 7, # Z-
+#           8, 9,10,10,11, 8, # X+
+#          15,14,13,13,12,15, # X-
+#          19,18,17,17,16,19, # Y+
+#          20,21,22,22,23,20] # Y-
 
-    return Shape(vertices, indices, image_filename)
+#     return Shape(vertices, indices, image_filename)
