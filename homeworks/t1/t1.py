@@ -26,13 +26,14 @@ class Controller:
         self.is_s_pressed = False
         self.is_a_pressed = False
         self.is_d_pressed = False
-        self.glasses = 1
+        self.glasses = 0
         self.humansOut = []
         self.zombiesOut = []
         self.humansIn = []
         self.zombiesIn = []
         self.gameover = 0  # -1: game over, 1: you won
         self.texScene = None
+        self.glassesScene = None
 
 
 # we will use the global controller as communication with the callback function
@@ -77,7 +78,16 @@ def on_key(window, key, scancode, action, mods):
 
     # Caso de detectar la barra espaciadora, se activan las gafas detectoras
     if key == glfw.KEY_ENTER and action ==glfw.PRESS:
-        controller.gameover = "restarting"
+        if controller.gameover ==1:
+            controller.gameover = 2
+        elif controller.gameover == -1:
+            controller.gameover = -2
+        elif controller.gameover == 3 or controller.gameover == -3:
+            for hum in controller.humansIn:
+                hum.remove()
+            for zom in controller.zombiesIn:
+                zom.remove()
+            controller.gameover = 0
 
     # Caso de detectar 0, se cambia el método de dibujo
     if key == glfw.KEY_0 and action ==glfw.PRESS:
@@ -112,6 +122,10 @@ if __name__ == "__main__":
     H = int(sys.argv[2])
     T = int(sys.argv[3])
     P = float(sys.argv[4])
+    if len(sys.argv) >= 6:
+        infectedProb=float(sys.argv[5])
+    else:
+        infectedProb=0.5
 
     # Connecting the callback function 'on_key' to handle keyboard events
     glfw.set_key_callback(window, on_key)
@@ -132,15 +146,48 @@ if __name__ == "__main__":
     # principal scene graph
     mainScene = createScene(pipeline)
 
-    # win scene graph
+    pressEnter_shape= createTextureGPUShape(bs.createTextureQuadXY(1, 1, 0, 1, 0, 1), tex_pipeline, "sprites/enter2.png")
+    pressEnterNode = sg.SceneGraphNode("enter")
+    pressEnterNode.transform = tr.matmul([tr.translate(0, -0.65, 0), tr.scale(0.6, 0.3, 1)])
+    pressEnterNode.childs = [pressEnter_shape]
+
+    youWinText_shape= createTextureGPUShape(bs.createTextureQuadXY(1, 1, 0, 1, 0, 1), tex_pipeline, "sprites/youwin.png")
+    youWinTextNode = sg.SceneGraphNode("winText")
+    youWinTextNode.transform = tr.matmul([tr.translate(-0.3, 0.3, 0), tr.scale(1.6, 0.8, 1)])
+    youWinTextNode.childs = [youWinText_shape]
+    
     youWin_shape= createTextureGPUShape(bs.createTextureQuadXY(1, 1, 0, 1, 0, 1), tex_pipeline, "sprites/trololo.png")
     youWinNode = sg.SceneGraphNode("win")
+    youWinNode.transform = tr.matmul([tr.translate(0, 0.3, 0), tr.scale(1, 0.7, 1)])
     youWinNode.childs = [youWin_shape]
 
-    # game over scene graph
+    gameOverText_shape= createTextureGPUShape(bs.createTextureQuadXY(1, 1, 0, 1, 0, 1), tex_pipeline, "sprites/gameover1.png")
+    gameOverTextNode = sg.SceneGraphNode("gameover")
+    gameOverTextNode.transform = tr.matmul([tr.translate(0, 0.3, 0), tr.scale(1, 0.6, 1)])
+    gameOverTextNode.childs = [gameOverText_shape]
+    
     gameOver_shape= createTextureGPUShape(bs.createTextureQuadXY(1, 1, 0, 1, 0, 1), tex_pipeline, "sprites/gameover.png")
-    gameOverNode = sg.SceneGraphNode("over")
+    gameOverNode = sg.SceneGraphNode("cry")
+    gameOverNode.transform = tr.matmul([tr.translate(0, 0.35, 0), tr.scale(1, 0.7, 1)])
     gameOverNode.childs = [gameOver_shape]
+
+    # win scene graph
+    youWinNode1 = sg.SceneGraphNode("win1")
+    youWinNode1.transform = tr.matmul([tr.translate(0, 0, 0), tr.scale(1, 1, 1)])
+    youWinNode1.childs = [youWinTextNode, pressEnterNode]
+
+    youWinNode2 = sg.SceneGraphNode("win2")
+    youWinNode2.transform = tr.matmul([tr.translate(0, 0, 0), tr.scale(1, 1, 1)])
+    youWinNode2.childs = [youWinNode, pressEnterNode]
+
+    # game over scene graph
+    gameOverNode1 = sg.SceneGraphNode("over1")
+    gameOverNode1.transform = tr.matmul([tr.translate(0, 0, 0), tr.scale(1, 1, 1)])
+    gameOverNode1.childs = [gameOverTextNode, pressEnterNode]
+
+    gameOverNode2 = sg.SceneGraphNode("over2")
+    gameOverNode2.transform = tr.matmul([tr.translate(0, 0, 0), tr.scale(1, 1, 1)])
+    gameOverNode2.childs = [gameOverNode, pressEnterNode]
 
     # player scene graph
     player_shapes= createSpriteShapes(0.5, 0.5, tex_pipeline, "sprites/hinata.png", 7, 4)
@@ -153,11 +200,11 @@ if __name__ == "__main__":
     player.set_controller(controller)
 
     # game over scene graph
-    aura_shape= createTextureGPUShape(bs.createTextureQuadXY(0.5, 0.5, 0, 1, 0, 1), tex_pipeline, "sprites/aura.png")
+    aura_shape= createTextureGPUShape(bs.createTextureQuadXY(0.5, 1.2, 0, 1, 0, 1), tex_pipeline, "sprites/aura.png")
     auraNode = sg.SceneGraphNode("aura")
     auraNode.childs = [aura_shape]
 
-    aura=Aura(-0.8, 0.3, 0.1)
+    aura=Aura(-0.75, 0.3, 0.2)
     # Se indican las referencias del nodo y el controller al modelo
     aura.set_model(auraNode)
     aura.set_controller(controller)
@@ -169,10 +216,14 @@ if __name__ == "__main__":
     grassNode = sg.SceneGraphNode("grass")
     grassNode.childs = [grass]
 
-    # # Se crean el grafo de escena con textura y se agregan las cargas
+    # # Se crean el grafo de escena con textura 
     tex_scene = sg.SceneGraphNode("textureScene")
-    tex_scene.childs = [playerNode, auraNode]
     controller.texScene=tex_scene
+    tex_scene.childs = [playerNode, auraNode]
+
+    # # Se crean el grafo de escena con textura para el uso de gafas
+    glasses_scene = sg.SceneGraphNode("glassesScene")
+    controller.glassesScene=glasses_scene
 
     # set of human/zombies shapes
     human_shapes= createSpriteShapes(0.3, 0.5, tex_pipeline, "sprites/humanDown.png", 3, 1)
@@ -180,40 +231,44 @@ if __name__ == "__main__":
     human_shapes.append(createSpriteShapes(0.3, 0.5, tex_pipeline, "sprites/zombieDown1.png", 4, 1)[0])
     human_shapes.append(createSpriteShapes(0.3, 0.5, tex_pipeline, "sprites/zombieUp1.png", 4, 1)[0])
 
-    humanQuantity= int(20/T*H) +5
-    zombieQuantity= int(25/T*Z) +5
+    # modify human shapes quantity
+    human_shapes[0].insert(2,human_shapes[0][0])
+    human_shapes[1].insert(2,human_shapes[1][0])
 
+    # number of humans to create (a little more than exactly necessary)
+    humanQuantity= int(20/T*H) +5
     for i in range(humanQuantity):
         # human scene graph
         humanNode = sg.SceneGraphNode("human")
         # human model instance
         x=np.random.randint(800)/1000 * (-1 + np.random.randint(2)*(2))
+        isInfected=np.random.choice([0, 1], p=[1-infectedProb, infectedProb])
         if np.random.randint(2):
-            human = Human(x, -1, 0.2, 1, 1, P=P, isZombie=0)
+            human = Human(x, -1, size=0.2, direction=1, wasHuman=1)
         else:
-            human = Human(x, 1, 0.2, 0, 1, P=P, isZombie=0)
+            human = Human(x, 1, size=0.2, direction=0, wasHuman=1)
         # controller reference
         human.set_controller(controller)
         # Se indican las referencias del nodo al modelo
         human.set_model(humanNode, human_shapes)
         controller.humansOut.append(human)
-        #tex_scene.childs.append(humanNode)
-
-    for i in range(zombieQuantity):
+        
+    # number of zombies to create (a little more than exactly necessary)
+    zombieQuantity= int(25/T*Z) +5
+    for i in range(zombieQuantity): 
         # human scene graph
         zombieNode = sg.SceneGraphNode("zombie")
         # human model instance
         x=np.random.randint(800)/1000 * (-1 + np.random.randint(2)*(2))
         if np.random.randint(2):
-            zombie = Human(x, -1, 0.2, 1, 0, isZombie=1)
+            zombie = Human(x, -1, size=0.2, direction=1, wasHuman=0)
         else:
-            zombie = Human(x, 1, 0.2, 0, 0, isZombie=1)
+            zombie = Human(x, 1, size=0.2, direction=0, wasHuman=0)
         # controller reference
         zombie.set_controller(controller)
         # Se indican las referencias del nodo al modelo
         zombie.set_model(zombieNode, human_shapes)
         controller.zombiesOut.append(zombie)
-        #tex_scene.childs.append(zombieNode)
 
 
 
@@ -250,30 +305,35 @@ if __name__ == "__main__":
 
         if controller.gameover==1:
             glUseProgram(tex_pipeline.shaderProgram)
-            sg.drawSceneGraphNode(youWinNode, tex_pipeline, "transform")
+            sg.drawSceneGraphNode(youWinNode1, tex_pipeline, "transform")
 
         elif controller.gameover==-1:
             glUseProgram(tex_pipeline.shaderProgram)
-            sg.drawSceneGraphNode(gameOverNode, tex_pipeline, "transform")
+            sg.drawSceneGraphNode(gameOverNode1, tex_pipeline, "transform")
         
-        elif controller.gameover=="restarting":
+        elif controller.gameover==2 or controller.gameover==-2:
             for hum in controller.humansIn:
-                hum.pos[1]=2*(-1 + 2*hum.actual_direction)
-                #controller.humansOut.append(hum)
-                #controller.humansIn.remove(hum)
+                hum.pos[1]=3*(-1 + 2*hum.actual_direction)
                 hum.update(delta)
             for zom in controller.zombiesIn:
-                zom.pos[1]=2*(-1 + 2*zom.actual_direction)
-                #controller.zombiesOut.append(zom)
-                #controller.zombiesIn.remove(zom)   
-                zom.update(delta) 
+                zom.pos[1]=3*(-1 + 2*zom.actual_direction)
+                zom.update(delta)
             player.pos=[0.9, -0.5]
             player.infected=0
+            player.zombie=0
             player.update(delta)
-            # Se dibuja el grafo de escena con texturas
+            controller.texScene.childs = [playerNode, auraNode]
+            controller.glassesScene.childs = []
+            if controller.gameover==2:
+                controller.gameover=3
+            elif controller.gameover==-2:
+                controller.gameover=-3
+        elif controller.gameover==3:
             glUseProgram(tex_pipeline.shaderProgram)
-            sg.drawSceneGraphNode(tex_scene, tex_pipeline, "transform")
-            controller.gameover=0
+            sg.drawSceneGraphNode(youWinNode2, tex_pipeline, "transform")
+        elif controller.gameover==-3:
+            glUseProgram(tex_pipeline.shaderProgram)
+            sg.drawSceneGraphNode(gameOverNode2, tex_pipeline, "transform")
         else:
             # Variables del tiempo
             t1 = glfw.get_time()
@@ -282,22 +342,29 @@ if __name__ == "__main__":
             waveNum += delta
             if (waveNum - T)>0:
                 waveNum -= T
-                if len(controller.humansOut)>=H:
+                player.infectedToZombie(1)
+                if len(controller.humansOut)>=H: # humans to enter to scene
                     for i in range(H):
                         controller.humansOut[0].outOfScene=0
                         controller.humansOut[0].pos[1] = -(1+np.random.randint(50)/100)*(-1 + 2*controller.humansOut[0].actual_direction)
                         controller.humansOut[0].zombie=0
-                        tex_scene.childs.append(controller.humansOut[0].model)
+                        controller.humansOut[0].infected=np.random.choice([0, 1], p=[1-infectedProb, infectedProb])
+                        controller.texScene.childs.append(controller.humansOut[0].model)
+                        if controller.humansOut[0].infected:
+                            controller.glassesScene.childs.append(controller.humansOut[0].model)
                         controller.humansIn.append(controller.humansOut[0])
-                        controller.humansOut.pop(0)
-                if len(controller.zombiesOut)>=Z:
+                        controller.humansOut.remove(controller.humansOut[0])
+                if len(controller.zombiesOut)>=Z: # zombies to enter to scene
                     for i in range(Z):
                         controller.zombiesOut[0].outOfScene=0
                         controller.zombiesOut[0].pos[1] = -(1+np.random.randint(50)/100)*(-1 + 2*controller.zombiesOut[0].actual_direction)
                         controller.zombiesOut[0].zombie=1
-                        tex_scene.childs.append(controller.zombiesOut[0].model)
+                        controller.zombiesOut[0].infected=1
+                        controller.texScene.childs.append(controller.zombiesOut[0].model)
                         controller.zombiesIn.append(controller.zombiesOut[0])
-                        controller.zombiesOut.pop(0)
+                        controller.zombiesOut.remove(controller.zombiesOut[0])
+                for hum in controller.humansIn:
+                    hum.infectedToZombie(P)
 
             # Se llama al metodo del player para detectar colisiones
             player.collision(controller.humansIn)
@@ -305,7 +372,7 @@ if __name__ == "__main__":
             # Se llama al metodo del player para actualizar su posicion
             player.update(delta)
 
-            aura.update()
+            aura.update(t1)
             aura.collision([player])
 
             # Se llama al metodo del human para actualizar su posicion
@@ -321,15 +388,20 @@ if __name__ == "__main__":
 
             # Se dibuja el grafo de escena con texturas
             glUseProgram(tex_pipeline.shaderProgram)
-            sg.drawSceneGraphNode(tex_scene, tex_pipeline, "transform")
+            sg.drawSceneGraphNode(controller.texScene, tex_pipeline, "transform")
+
+            #
+            if controller.glasses:
+                glUseProgram(tex_pipeline.shaderProgram2)
+                sg.drawSceneGraphNode(controller.glassesScene, tex_pipeline, "transform")
 
         # Once the drawing is rendered, buffers are swap so an uncomplete drawing is never seen.
         glfw.swap_buffers(window)
 
-    # print(controller.humansOut)
-    # print(controller.humansIn)
     # freeing GPU memory
     mainScene.clear()
     tex_scene.clear()
+    controller.texScene.clear()
+    controller.glassesScene.clear()
     
     glfw.terminate()

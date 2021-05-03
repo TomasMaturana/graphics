@@ -164,6 +164,12 @@ def createScene(pipeline):
     gpuApricotQuad = createGPUShape(bs.createColorQuadXY(1,0.7,0.4), pipeline) # store wall shape 
     gpuLightGrayQuad = createGPUShape(bs.createColorQuadXY(0.8, 0.8, 0.8), pipeline) # gray metal shape
     gpuGreenQuad = createGPUShape(bs.createColorQuadXY(0.4, 1, 0.4), pipeline) # green quad shape
+    gpuPlayerCircle = createGPUShape(createColorCircle(30, 0.8, 1, 1), pipeline) # 
+
+    # player circle node
+    playerCircleNode = sg.SceneGraphNode("playerCircle")
+    playerCircleNode.transform = tr.matmul([tr.translate(0.9, -0.5, 0), tr.scale(0.2, 0.3, 1)])
+    playerCircleNode.childs = [gpuPlayerCircle]
 
     # TREE ###########################################################################################################
     # tree leaves node 1
@@ -186,10 +192,30 @@ def createScene(pipeline):
     trunkNode.transform = tr.matmul([tr.translate(0, 0, 0), tr.scale(0.3, 1, 1)])
     trunkNode.childs = [gpuBrownQuad]
 
-    # tree node
-    treeNode = sg.SceneGraphNode("tree")
-    treeNode.transform = tr.matmul([tr.translate(0.9, 0.8, 0), tr.scale(0.2, 0.4, 1)])
-    treeNode.childs = [trunkNode, leavesNode1, leavesNode2, leavesNode3]   
+    # tree node 1
+    treeNode1 = sg.SceneGraphNode("tree1")
+    treeNode1.transform = tr.matmul([tr.translate(0.9, 0.8, 0), tr.scale(0.2, 0.4, 1)])
+    treeNode1.childs = [trunkNode, leavesNode1, leavesNode2, leavesNode3]   
+
+    # tree node 2
+    treeNode2 = sg.SceneGraphNode("tree2")
+    treeNode2.transform = tr.matmul([tr.translate(0.88, -0.85, 0), tr.scale(0.2, 0.4, 1)])
+    treeNode2.childs = [trunkNode, leavesNode1, leavesNode2, leavesNode3]   
+
+    # tree node 3
+    treeNode3 = sg.SceneGraphNode("tree3")
+    treeNode3.transform = tr.matmul([tr.translate(-0.9, -0.8, 0), tr.scale(0.2, 0.4, 1)])
+    treeNode3.childs = [trunkNode, leavesNode1, leavesNode2, leavesNode3]   
+
+    # tree node 4
+    treeNode4 = sg.SceneGraphNode("tre4")
+    treeNode4.transform = tr.matmul([tr.translate(0, -0.6, 0), tr.scale(0.2, 0.4, 1)])
+    treeNode4.childs = [trunkNode, leavesNode1, leavesNode2, leavesNode3]  
+
+    # tree node 5
+    treeNode5 = sg.SceneGraphNode("tre4")
+    treeNode5.transform = tr.matmul([tr.translate(0, 0.6, 0), tr.scale(0.2, 0.4, 1)])
+    treeNode5.childs = [trunkNode, leavesNode1, leavesNode2, leavesNode3]   
 
     # STREET ##########################################################################################################
     # asphalt node
@@ -303,136 +329,9 @@ def createScene(pipeline):
     storeNode.transform = tr.matmul([tr.translate(-0.83, 0.3, 0), tr.scale(0.5, 1, 1)])
     storeNode.childs = [facadeNode, roofNode]
 
-    # Nodo del cielo, quad celeste escalado
-    # skyNode = sg.SceneGraphNode("sky")
-    # skyNode.transform = tr.scale(2, 2, 1)
-    # skyNode.childs = [gpuBlueQuad]
-
-    # # Nodo del sol, circulo amarillo escalado y posicionado
-    # sunNode = sg.SceneGraphNode("sun")
-    # sunNode.transform = tr.matmul([tr.translate(0.7, 0.6, 0), tr.scale(0.3, 0.3, 1)])
-    # sunNode.childs = [gpuYellowCircle]
-
-    # # Nodo de la montaña 1, triangulo verde escalado y posicionado
-    # mountain1Node = sg.SceneGraphNode("mountain1")
-    # mountain1Node.transform = tr.matmul([tr.translate(-0.5, -0.0, 0), tr.scale(2.4, 1, 1)])
-    # mountain1Node.childs = [gpuGreenTriangle]
-
-    # # Nodo de la montaña 2, triangulo verde escalado y posicionado
-    # mountain2Node = sg.SceneGraphNode("mountain2")
-    # mountain2Node.transform = tr.matmul([tr.translate(-0.1, 0, 0), tr.scale(2.2, 1.5, 1)])
-    # mountain2Node.childs = [gpuGreenTriangle]
-
-    # # Nodo de la montaña 3, triangulo verde escalado y posicionado
-    # mountain3Node = sg.SceneGraphNode("mountain3")
-    # mountain3Node.transform = tr.matmul([tr.translate(0.6, -0.28, 0), tr.scale(4, 1.3, 1)])
-    # mountain3Node.childs = [gpuGreenTriangle]
-
-    # # Nodo que agrupa a las montañas, posicionado
-    # mountainsNode = sg.SceneGraphNode("mountains")
-    # mountainsNode.transform = tr.matmul([tr.translate(0, -0.3, 0), tr.scale(1, 1, 1)])
-    # mountainsNode.childs = [mountain1Node, mountain2Node, mountain3Node]
-
-    # # Nodo2 que agrupa a las montañas, posicionado
-    # mountainsNode2 = sg.SceneGraphNode("mountains2")
-    # mountainsNode2.transform = tr.matmul([tr.translate(0, -0.3, 0), tr.scale(1, 1, 1)])
-    # mountainsNode2.childs = [mountain1Node, mountain2Node, mountain3Node]
-
-    # # Nodo3 que agrupa a las montañas, posicionado
-    # mountainsNode3 = sg.SceneGraphNode("mountains3")
-    # mountainsNode3.transform = tr.matmul([tr.translate(0, -0.3, 0), tr.scale(1, 1, 1)])
-    # mountainsNode3.childs = [mountain1Node, mountain2Node, mountain3Node]
-
-    # # Nodo de la carretera, quad gris escalado y posicionado
-    # highwayNode = sg.SceneGraphNode("highway")
-    # highwayNode.transform = tr.matmul([tr.translate(0, -0.65, 0), tr.scale(2.0, 0.4, 1)])
-    # highwayNode.childs = [gpuGrayQuad]
-
-    # # Nodo del triangulo cafe escalado y posicionado
-    # scaledTriangleNode = sg.SceneGraphNode("slTriangle")
-    # scaledTriangleNode.transform = tr.matmul([tr.translate(0, 0.25, 0), tr.scale(0.2, 0.5, 1)])
-    # scaledTriangleNode.childs = [gpuBrownTriangle]
-
-    # # Nodo del triangulo rotado
-    # rotatedTriangleNode = sg.SceneGraphNode("rtTriangle")
-    # rotatedTriangleNode.transform = tr.rotationZ(math.pi)
-    # rotatedTriangleNode.childs = [scaledTriangleNode]
-
-    # # Nodo que junta los tringulos para hacer un aspa, luego se posiciona
-    # bladeNode = sg.SceneGraphNode("blade")
-    # bladeNode.transform = tr.translate(0, 0.5, 0)
-    # bladeNode.childs = [scaledTriangleNode, rotatedTriangleNode]
-
-    # # Nodo con un aspa rotada a la izquierda
-    # rotatedBlade1Node = sg.SceneGraphNode("rtBlade1")
-    # rotatedBlade1Node.transform = tr.rotationZ(2*math.pi/3)
-    # rotatedBlade1Node.childs = [bladeNode]
-
-    # # Nodo con un aspa rotada a la derecha
-    # rotatedBlade2Node = sg.SceneGraphNode("rtBlade2")
-    # rotatedBlade2Node.transform = tr.rotationZ(4*math.pi/3)
-    # rotatedBlade2Node.childs = [bladeNode]
-
-    # # Nodo rotor que juntas las aspas
-    # scaleRotorNode = sg.SceneGraphNode("slRotor")
-    # scaleRotorNode.transform = tr.scale(1,1,1)
-    # scaleRotorNode.childs = [bladeNode, rotatedBlade1Node, rotatedBlade2Node]
-
-    # # Nodo que contiene la rotacion del rotor
-    # rotateRotorNode = sg.SceneGraphNode("rtRotor")
-    # rotateRotorNode.transform = tr.rotationZ(0.5)
-    # rotateRotorNode.childs = [scaleRotorNode]
-    
-    # # Nodo con el rotor posicionado
-    # translateRotorNode = sg.SceneGraphNode("tlRotor")
-    # translateRotorNode.transform = tr.translate(0, 0.5, 0)
-    # translateRotorNode.childs = [rotateRotorNode]
-
-    # # Nodo torre, quad gris escalado y posicionado
-    # towerNode = sg.SceneGraphNode("tower")
-    # towerNode.transform = tr.matmul([tr.translate(0, -0.7, 0), tr.scale(0.15, 2.4, 1)])
-    # towerNode.childs = [gpuGrayQuad]
-
-    # # Nodo del molino de viento escalado
-    # windMillNode = sg.SceneGraphNode("windMill")
-    # windMillNode.transform = tr.scale(0.2, 0.2, 1)
-    # windMillNode.childs = [towerNode, translateRotorNode]
-    
-    # # Molino de viento 1 escalado y posicionado
-    # translateWindMill1Node = sg.SceneGraphNode("windMill1")
-    # translateWindMill1Node.transform = tr.matmul([tr.translate(-0.7,0.2,0), tr.scale(1.2, 1.2, 1.2)])
-    # translateWindMill1Node.childs = [windMillNode]
-
-    # # Molino de viento 2 escalado y posicionado
-    # translateWindMill2Node = sg.SceneGraphNode("windMill2")
-    # translateWindMill2Node.transform = tr.matmul([tr.translate(-0.3, 0.3, 0), tr.scale(0.7, 0.7, 0.7)])
-    # translateWindMill2Node.childs = [windMillNode]
-
-    # # Molino de viento 3 escalado y posicionado
-    # translateWindMill3Node = sg.SceneGraphNode("windMill3")
-    # translateWindMill3Node.transform = tr.matmul([tr.translate(0.2,0.3,0), tr.scale(1.8, 1.8, 1)])
-    # translateWindMill3Node.childs = [windMillNode]
-
-    # # Nodo que junta los molinos de la escena
-    # windMillGroupNode = sg.SceneGraphNode("windMills")
-    # windMillGroupNode.childs = [translateWindMill1Node, translateWindMill2Node, translateWindMill3Node]
-    
-    # # nodo de la linea de pista, quad blanco escalado y posicionado
-    # lineNode = sg.SceneGraphNode("line")
-    # lineNode.transform = tr.matmul([tr.translate(0, -0.65, 0), tr.scale(2, 0.02, 1)])
-    # lineNode.childs = [gpuWhiteQuad]
-
-    # # Nodo del background con todos los nodos anteriores
-    # backGroundNode = sg.SceneGraphNode("background")
-    # backGroundNode.childs = [skyNode, sunNode, mountainsNode, mountainsNode2, mountainsNode3, highwayNode, windMillGroupNode, lineNode]
-
-    # Nodo del background con todos los nodos anteriores
-    # backGroundNode = sg.SceneGraphNode("background")
-    # backGroundNode.childs = [skyNode]
-
     # Nodo padre de la escena
     sceneNode = sg.SceneGraphNode("world")
-    sceneNode.childs = [streetNode1, streetNode2, treeNode, storeNode]
+    sceneNode.childs = [streetNode1, streetNode2, playerCircleNode, treeNode1, treeNode2, treeNode3, treeNode4, treeNode5, storeNode]
 
     return sceneNode
 

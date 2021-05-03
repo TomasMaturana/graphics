@@ -286,10 +286,30 @@ class SimpleTextureTransformShaderProgram:
             }
             """
 
+        fragment_shader2 = """
+            #version 130
+
+            in vec2 outTexCoords;
+
+            out vec4 outColor;
+
+            uniform sampler2D samplerTex;
+
+            void main()
+            {
+                outColor = texture(samplerTex, outTexCoords) + vec4(1,0,0,0);
+            }
+            """
+
         # Compiling our shader program
         self.shaderProgram = OpenGL.GL.shaders.compileProgram(
             OpenGL.GL.shaders.compileShader(vertex_shader, GL_VERTEX_SHADER),
             OpenGL.GL.shaders.compileShader(fragment_shader, GL_FRAGMENT_SHADER))
+
+        # Compiling our shader program
+        self.shaderProgram2 = OpenGL.GL.shaders.compileProgram(
+            OpenGL.GL.shaders.compileShader(vertex_shader, GL_VERTEX_SHADER),
+            OpenGL.GL.shaders.compileShader(fragment_shader2, GL_FRAGMENT_SHADER))
 
 
     def setupVAO(self, gpuShape):
