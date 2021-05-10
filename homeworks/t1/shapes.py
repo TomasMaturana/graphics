@@ -69,6 +69,31 @@ def createColorCircle(N, r, g, b):
 
     return bs.Shape(vertices, indices)
 
+def createColorCircle2(N, r,g,b, rad=0.5):
+
+    # First vertex at the center
+    # vertices = [rad* math.cos(N), rad* math.cos(N), 0, r, g, b]
+    vertices = []
+    indices = []
+
+    dtheta = 2 * math.pi / N
+
+    for i in range(N):
+        theta = i * dtheta
+
+        vertices += [
+            # vertex coordinates
+            rad * math.cos(theta), rad * math.sin(theta), 0, r, g, b]
+
+        # A triangle is created using the center, this and the next vertex
+        if(i):
+            indices += [i-1, i]
+
+    # The final triangle connects back to the second vertex
+    indices += [N-1, 0]
+
+    return bs.Shape(vertices, indices)
+
 def createSpriteShapes(quadTexX, quadTexY, pipeline, path, ximgs, yimgs):
     # Creamos una lista para guardar todas las gpu shapes necesarias
     shapes = []
@@ -90,68 +115,6 @@ def createSpriteShapes(quadTexX, quadTexY, pipeline, path, ximgs, yimgs):
     return shapes
 
 
-def createCar(pipeline):
-    # Se crea la escena del auto de la pregunta 1
-
-    # Se crean las shapes en GPU
-    gpuChasis = createGPUShape(createColorChasis(0.7, 0, 0), pipeline) # Shape del chasis 
-    gpuGrayCircle =  createGPUShape(createColorCircle(20, 0.4, 0.4, 0.4), pipeline) # Shape del circulo gris
-    gpuBlackCircle =  createGPUShape(createColorCircle(20, 0, 0, 0), pipeline) # Shape del circulo negro
-    gpuBlueQuad = createGPUShape(bs.createColorQuad(0.2, 0.2, 1), pipeline) # Shape de quad azul
-
-    # Nodo del chasis rojo
-    redChasisNode = sg.SceneGraphNode("redChasis")
-    redChasisNode.childs = [gpuChasis]
-
-    # Nodo del circulo gris
-    grayCircleNode = sg.SceneGraphNode("grayCircleNode")
-    grayCircleNode.childs = [gpuGrayCircle]
-    
-    # Nodo del circulo negro
-    blackCircleNode = sg.SceneGraphNode("blackCircle")
-    blackCircleNode.childs = [gpuBlackCircle]
-
-    # Nodo del quad celeste
-    blueQuadNode = sg.SceneGraphNode("blueQuad")
-    blueQuadNode.childs = [gpuBlueQuad]
-
-    # Nodo del circulo gris escalado
-    scaledGrayCircleNode = sg.SceneGraphNode("slGrayCircle")
-    scaledGrayCircleNode.transform = tr.scale(0.6, 0.6, 0.6)
-    scaledGrayCircleNode.childs = [grayCircleNode]
-
-    # Nodo de una rueda, escalado
-    wheelNode = sg.SceneGraphNode("wheel")
-    wheelNode.transform = tr.scale(0.22, 0.22, 0.22)
-    wheelNode.childs = [blackCircleNode, scaledGrayCircleNode]
-
-    # Nodo de la ventana, quad celeste escalado
-    windowNode = sg.SceneGraphNode("window")
-    windowNode.transform = tr.scale(0.22, 0.15, 1)
-    windowNode.childs = [blueQuadNode]
-     
-    # Rueda izquierda posicionada
-    leftWheel = sg.SceneGraphNode("lWheel")
-    leftWheel.transform = tr.translate(-0.3, -0.2, 0)
-    leftWheel.childs = [wheelNode]
-
-    # Rueda derecha posicionada
-    rightWheel = sg.SceneGraphNode("rWheel")
-    rightWheel.transform = tr.translate(0.26, -0.2, 0)
-    rightWheel.childs = [wheelNode]
-
-    # Ventana posicionada
-    translateWindow = sg.SceneGraphNode("tlWindow")
-    translateWindow.transform = tr.translate(-0.08, 0.06, 0.0)
-    translateWindow.childs = [windowNode]
-
-    # Nodo padre auto
-    carNode = sg.SceneGraphNode("car")
-    carNode.childs = [redChasisNode, translateWindow, leftWheel, rightWheel]
-
-    return carNode
-
-
 def createScene(pipeline):
     # Funcion que crea la escena de la pregunta 2
 
@@ -164,12 +127,6 @@ def createScene(pipeline):
     gpuApricotQuad = createGPUShape(bs.createColorQuadXY(1,0.7,0.4), pipeline) # store wall shape 
     gpuLightGrayQuad = createGPUShape(bs.createColorQuadXY(0.8, 0.8, 0.8), pipeline) # gray metal shape
     gpuGreenQuad = createGPUShape(bs.createColorQuadXY(0.4, 1, 0.4), pipeline) # green quad shape
-    gpuPlayerCircle = createGPUShape(createColorCircle(30, 0.8, 1, 1), pipeline) # 
-
-    # player circle node
-    playerCircleNode = sg.SceneGraphNode("playerCircle")
-    playerCircleNode.transform = tr.matmul([tr.translate(0.9, -0.5, 0), tr.scale(0.2, 0.3, 1)])
-    playerCircleNode.childs = [gpuPlayerCircle]
 
     # TREE ###########################################################################################################
     # tree leaves node 1
@@ -331,9 +288,33 @@ def createScene(pipeline):
 
     # Nodo padre de la escena
     sceneNode = sg.SceneGraphNode("world")
-    sceneNode.childs = [streetNode1, streetNode2, playerCircleNode, treeNode1, treeNode2, treeNode3, treeNode4, treeNode5, storeNode]
+    sceneNode.childs = [streetNode1, streetNode2, treeNode1, treeNode2, treeNode3, treeNode4, treeNode5, storeNode]
 
     return sceneNode
 
 
+def createPlayerCircle(pipeline):
+    gpuPlayerCircle = createGPUShape(createColorCircle2(30, 1, 1, 1), pipeline) # 
+    scales=[0.2,0.3]
+    # player circle node
+    circleNode1 = sg.SceneGraphNode("playerCircle1")
+    circleNode1.transform = tr.matmul([tr.scale(scales[0], scales[1], 1)])
+    circleNode1.childs = [gpuPlayerCircle]
+
+    circleNode2 = sg.SceneGraphNode("playerCircle2")
+    circleNode2.transform = tr.matmul([tr.scale(scales[0]/1.5, scales[1]/1.5, 1)])
+    circleNode2.childs = [gpuPlayerCircle]
+
+    circleNode3 = sg.SceneGraphNode("playerCircle3")
+    circleNode3.transform = tr.matmul([tr.scale(scales[0]/2, scales[1]/2, 1)])
+    circleNode3.childs = [gpuPlayerCircle]
+
+    circleNode4 = sg.SceneGraphNode("playerCircle4")
+    circleNode4.transform = tr.matmul([tr.scale(scales[0]/2.5, scales[1]/2.5, 1)])
+    circleNode4.childs = [gpuPlayerCircle]
+
+    playerCircleNode = sg.SceneGraphNode("playerCircle")
+    playerCircleNode.transform = tr.matmul([tr.translate(0.9, -0.55, 0)])
+    playerCircleNode.childs = [circleNode1, circleNode2, circleNode3, circleNode4]
+    return playerCircleNode
 

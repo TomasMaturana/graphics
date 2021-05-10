@@ -182,3 +182,6 @@ def lookAt(eye, at, up):
             [-forward[0], -forward[1], -forward[2], np.dot(forward, eye)],
             [0,0,0,1]
         ], dtype = np.float32)
+
+def transparency(t):
+    return np.array([0, 0, 0, t], dtype = np.float32)

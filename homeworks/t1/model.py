@@ -6,9 +6,9 @@ import grafica.transformations as tr
 
 class Player():
     # Clase que contiene al modelo del player / auro
-    def __init__(self, size, P):
+    def __init__(self, size, vel):
         self.pos = [0.9, -0.5] # Posicion en el escenario
-        self.vel = [0.5,1] # Velocidad de desplazamiento
+        self.vel = [vel/2,vel] # Velocidad de desplazamiento
         self.model = None # Referencia al grafo de escena asociado
         self.controller = None # Referencia del controlador, para acceder a sus variables
         self.size = size # Escala a aplicar al nodo 
@@ -18,7 +18,6 @@ class Player():
         self.actual_direction = 0 # 0:down  1:up  2:right  3:left
         self.infected= 0
         self.zombie= 0
-        self.P = P
 
     def set_model(self, new_model, sprite=None):
         # Se obtiene una referencia a uno nodo
@@ -68,6 +67,7 @@ class Player():
                 if someone.zombie:
                     self.zombie=1
                     self.controller.gameover=-1
+                    print("fatal collision")
                 elif someone.infected and not self.infected:
                     self.infected=1 
         return
@@ -77,6 +77,7 @@ class Player():
             self.zombie=np.random.choice([0, 1], p=[1-P, P])
         if self.zombie:
             self.controller.gameover=-1
+            print("falta infection")
 
     
 class Human():
@@ -112,13 +113,13 @@ class Human():
 
     def update(self, delta):
         if self.actual_direction and self.pos[1] <1.3: # moving up
-            self.pos[1] += self.vel[1] * delta / (1 + self.zombie*0.5)
-            self.actual_sprite=(self.actual_sprite + 0.01)%4
+            self.pos[1] += self.vel[1] * delta / (1 + self.zombie*0.5) #zombies are a bit slower
+            self.actual_sprite=(self.actual_sprite + 0.05 - self.zombie*0.03)%4
         elif not self.actual_direction and self.pos[1] >-1.3: # moving down
-            self.pos[1] -= self.vel[1] * delta / (1 + self.zombie*0.5)
-            self.actual_sprite=(self.actual_sprite + 0.01)%4
+            self.pos[1] -= self.vel[1] * delta / (1 + self.zombie*0.5) #zombies are a bit slower
+            self.actual_sprite=(self.actual_sprite + 0.05 - self.zombie*0.03)%4
         else:
-            self.remove()
+            self.outOfScene = 1
 
         if not self.outOfScene:
             if self.stepsToWalk<=0:
@@ -140,27 +141,6 @@ class Human():
             # self.model.childs= [self.sprite[(self.actual_direction + (self.zombie * 2) - (self.zombie * 2 *self.wasHuman*self.controller.glasses))][int(self.actual_sprite - 1*self.wasHuman*self.controller.glasses)]]
             self.model.childs= [self.sprite[(self.actual_direction + (self.zombie * 2) )][int(self.actual_sprite)]]
         self.model.transform = tr.matmul([tr.translate(self.pos[0], self.pos[1], 0), tr.scale(self.size/2, self.size, 1)])
-
-    def remove(self):
-        self.outOfScene = 1
-        try:
-            self.controller.texScene.childs.remove(self.model)
-        except:
-            pass
-        if self.wasHuman:
-            if self.model in self.controller.glassesScene.childs:
-                self.controller.glassesScene.childs.remove(self.model)
-            self.controller.humansOut.append(self)
-            try:
-                self.controller.humansIn.remove(self)
-            except:
-                pass
-        else:
-            self.controller.zombiesOut.append(self)
-            try:
-                self.controller.zombiesIn.remove(self)
-            except:
-                pass
     
     def collision(self, someonesList):
         # function to detect collisions between humans and zombies
@@ -175,13 +155,23 @@ class Human():
                 elif collision and someone.infected and not self.infected:
                     self.infected=1 
                     self.controller.glassesScene.childs.append(self.model)
-            return
+        return
 
     def infectedToZombie(self, P): # human infected is converted to zombie with P probability
         if self.wasHuman and self.infected and not self.zombie:
             self.zombie=np.random.choice([0, 1], p=[1-P, P])
         if self.model in self.controller.glassesScene.childs and self.zombie:
             self.controller.glassesScene.childs.remove(self.model)
+
+    def reset(self, infectedProb):
+        self.outOfScene=0
+        self.pos[1] = -(1+np.random.randint(50)/100)*(-1 + 2*self.actual_direction)
+        if self.wasHuman:
+            self.zombie=0
+            self.infected=np.random.choice([0, 1], p=[1-infectedProb, infectedProb])
+        else:
+            self.infected=1
+        
 
 class Aura():
     # Clase para contener las caracteristicas de un objeto que representa una carga 

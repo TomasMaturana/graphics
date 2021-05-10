@@ -34,6 +34,7 @@ class Controller:
         self.gameover = 0  # -1: game over, 1: you won
         self.texScene = None
         self.glassesScene = None
+        self.infectedMode = False
 
 
 # we will use the global controller as communication with the callback function
@@ -93,6 +94,10 @@ def on_key(window, key, scancode, action, mods):
     if key == glfw.KEY_0 and action ==glfw.PRESS:
         controller.fillPolygon = not controller.fillPolygon
 
+    # Caso de detectar 0, se cambia el método de dibujo
+    if key == glfw.KEY_1 and action ==glfw.PRESS:
+        controller.infectedMode = not controller.infectedMode
+
     # Caso en que se cierra la ventana
     elif key == glfw.KEY_ESCAPE and action ==glfw.PRESS:
         glfw.set_window_should_close(window, True)
@@ -123,9 +128,13 @@ if __name__ == "__main__":
     T = int(sys.argv[3])
     P = float(sys.argv[4])
     if len(sys.argv) >= 6:
-        infectedProb=float(sys.argv[5])
+        infectedProb=float(sys.argv[5]) # probability of an infected human at appear in scene
     else:
         infectedProb=0.5
+    if len(sys.argv) >= 7:
+        playerVel=float(sys.argv[6]) # player velocity
+    else:
+        playerVel=0.5
 
     # Connecting the callback function 'on_key' to handle keyboard events
     glfw.set_key_callback(window, on_key)
@@ -145,6 +154,9 @@ if __name__ == "__main__":
 
     # principal scene graph
     mainScene = createScene(pipeline)
+
+    # player start circle
+    playerCircleNode= createPlayerCircle(pipeline)
 
     pressEnter_shape= createTextureGPUShape(bs.createTextureQuadXY(1, 1, 0, 1, 0, 1), tex_pipeline, "sprites/enter2.png")
     pressEnterNode = sg.SceneGraphNode("enter")
@@ -194,7 +206,7 @@ if __name__ == "__main__":
     playerNode = sg.SceneGraphNode("player")
 
     # player model instance
-    player = Player(0.2, P)
+    player = Player(0.2, playerVel)
     # Se indican las referencias del nodo y el controller al modelo
     player.set_model(playerNode, player_shapes)
     player.set_controller(controller)
@@ -219,7 +231,7 @@ if __name__ == "__main__":
     # # Se crean el grafo de escena con textura 
     tex_scene = sg.SceneGraphNode("textureScene")
     controller.texScene=tex_scene
-    tex_scene.childs = [playerNode, auraNode]
+    controller.texScene.childs = [playerNode, auraNode]
 
     # # Se crean el grafo de escena con textura para el uso de gafas
     glasses_scene = sg.SceneGraphNode("glassesScene")
@@ -236,12 +248,12 @@ if __name__ == "__main__":
     human_shapes[1].insert(2,human_shapes[1][0])
 
     # number of humans to create (a little more than exactly necessary)
-    humanQuantity= int(20/T*H) +5
+    humanQuantity= int(25/T*H)
     for i in range(humanQuantity):
         # human scene graph
         humanNode = sg.SceneGraphNode("human")
         # human model instance
-        x=np.random.randint(800)/1000 * (-1 + np.random.randint(2)*(2))
+        x=np.random.randint(800)/1000 * (-1 + np.random.randint(2)*(2)) 
         isInfected=np.random.choice([0, 1], p=[1-infectedProb, infectedProb])
         if np.random.randint(2):
             human = Human(x, -1, size=0.2, direction=1, wasHuman=1)
@@ -254,7 +266,7 @@ if __name__ == "__main__":
         controller.humansOut.append(human)
         
     # number of zombies to create (a little more than exactly necessary)
-    zombieQuantity= int(25/T*Z) +5
+    zombieQuantity= int(30/T*Z) 
     for i in range(zombieQuantity): 
         # human scene graph
         zombieNode = sg.SceneGraphNode("zombie")
@@ -295,33 +307,51 @@ if __name__ == "__main__":
         # Clearing the screen
         glClear(GL_COLOR_BUFFER_BIT)
 
-        # texture background is drawed
+        # draw texture background
         glUseProgram(tex_pipeline.shaderProgram)
         sg.drawSceneGraphNode(grassNode, tex_pipeline, "transform")
 
-        # Se dibuja el grafo de escena principal
-        glUseProgram(pipeline.shaderProgram)
+        # draw principal scene graph
+        if controller.infectedMode and player.infected:
+            glUseProgram(pipeline.shaderProgram2)
+        else:
+            glUseProgram(pipeline.shaderProgram)
         sg.drawSceneGraphNode(mainScene, pipeline, "transform")
 
+        # draw start player circles
+        glUseProgram(pipeline.shaderProgram)
+        sg.drawSceneGraphNode(playerCircleNode, pipeline, "transform", mode=GL_LINES)
+
         if controller.gameover==1:
-            glUseProgram(tex_pipeline.shaderProgram)
+            glUseProgram(tex_pipeline.shaderProgram3)
             sg.drawSceneGraphNode(youWinNode1, tex_pipeline, "transform")
 
         elif controller.gameover==-1:
-            glUseProgram(tex_pipeline.shaderProgram)
+            glUseProgram(tex_pipeline.shaderProgram3)
             sg.drawSceneGraphNode(gameOverNode1, tex_pipeline, "transform")
         
         elif controller.gameover==2 or controller.gameover==-2:
             for hum in controller.humansIn:
                 hum.pos[1]=3*(-1 + 2*hum.actual_direction)
                 hum.update(delta)
+                controller.texScene.childs.remove(hum.model)
+                if hum.infected:
+                    try:
+                        controller.glassesScene.childs.remove(hum.model)
+                    except:
+                        pass
+                controller.humansOut.append(hum)
             for zom in controller.zombiesIn:
                 zom.pos[1]=3*(-1 + 2*zom.actual_direction)
                 zom.update(delta)
+                controller.texScene.childs.remove(zom.model)
+                controller.zombiesOut.append(zom)
             player.pos=[0.9, -0.5]
             player.infected=0
             player.zombie=0
             player.update(delta)
+            controller.humansIn=[]
+            controller.zombiesIn=[]
             controller.texScene.childs = [playerNode, auraNode]
             controller.glassesScene.childs = []
             if controller.gameover==2:
@@ -329,10 +359,10 @@ if __name__ == "__main__":
             elif controller.gameover==-2:
                 controller.gameover=-3
         elif controller.gameover==3:
-            glUseProgram(tex_pipeline.shaderProgram)
+            glUseProgram(tex_pipeline.shaderProgram3)
             sg.drawSceneGraphNode(youWinNode2, tex_pipeline, "transform")
         elif controller.gameover==-3:
-            glUseProgram(tex_pipeline.shaderProgram)
+            glUseProgram(tex_pipeline.shaderProgram3)
             sg.drawSceneGraphNode(gameOverNode2, tex_pipeline, "transform")
         else:
             # Variables del tiempo
@@ -342,13 +372,10 @@ if __name__ == "__main__":
             waveNum += delta
             if (waveNum - T)>0:
                 waveNum -= T
-                player.infectedToZombie(1)
+                player.infectedToZombie(P)
                 if len(controller.humansOut)>=H: # humans to enter to scene
                     for i in range(H):
-                        controller.humansOut[0].outOfScene=0
-                        controller.humansOut[0].pos[1] = -(1+np.random.randint(50)/100)*(-1 + 2*controller.humansOut[0].actual_direction)
-                        controller.humansOut[0].zombie=0
-                        controller.humansOut[0].infected=np.random.choice([0, 1], p=[1-infectedProb, infectedProb])
+                        controller.humansOut[0].reset(infectedProb)
                         controller.texScene.childs.append(controller.humansOut[0].model)
                         if controller.humansOut[0].infected:
                             controller.glassesScene.childs.append(controller.humansOut[0].model)
@@ -356,10 +383,7 @@ if __name__ == "__main__":
                         controller.humansOut.remove(controller.humansOut[0])
                 if len(controller.zombiesOut)>=Z: # zombies to enter to scene
                     for i in range(Z):
-                        controller.zombiesOut[0].outOfScene=0
-                        controller.zombiesOut[0].pos[1] = -(1+np.random.randint(50)/100)*(-1 + 2*controller.zombiesOut[0].actual_direction)
-                        controller.zombiesOut[0].zombie=1
-                        controller.zombiesOut[0].infected=1
+                        controller.humansOut[0].reset(infectedProb)
                         controller.texScene.childs.append(controller.zombiesOut[0].model)
                         controller.zombiesIn.append(controller.zombiesOut[0])
                         controller.zombiesOut.remove(controller.zombiesOut[0])
@@ -378,13 +402,28 @@ if __name__ == "__main__":
             # Se llama al metodo del human para actualizar su posicion
             for hum in controller.humansIn:
                 hum.update(delta)
-                if hum.zombie==0:
-                    hum.collision(controller.humansIn)
-                    hum.collision(controller.zombiesIn)
+                if hum.outOfScene:
+                    controller.texScene.childs.remove(hum.model)
+                    if hum.infected:
+                        try:
+                            controller.glassesScene.childs.remove(hum.model)
+                        except:
+                            pass
+                    controller.humansOut.append(hum)
+                    controller.humansIn.remove(hum)
+                else:
+                    if hum.zombie==0:
+                        hum.collision([player])
+                        hum.collision(controller.humansIn)
+                        hum.collision(controller.zombiesIn)
 
             # Se llama al metodo del zombie para actualizar su posicion
             for zom in controller.zombiesIn:
                 zom.update(delta)
+                if zom.outOfScene:
+                    controller.texScene.childs.remove(zom.model)
+                    controller.zombiesOut.append(zom)
+                    controller.zombiesIn.remove(zom)
 
             # Se dibuja el grafo de escena con texturas
             glUseProgram(tex_pipeline.shaderProgram)
@@ -403,5 +442,10 @@ if __name__ == "__main__":
     tex_scene.clear()
     controller.texScene.clear()
     controller.glassesScene.clear()
+    grassNode.clear()
+    youWinNode1.clear()
+    gameOverNode1.clear()
+    youWinNode2.clear()
+    gameOverNode2.clear()
     
     glfw.terminate()

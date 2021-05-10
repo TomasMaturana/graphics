@@ -216,9 +216,26 @@ class SimpleTransformShaderProgram:
             }
             """
 
+        fragment_shader2 = """
+            #version 130
+            in vec3 newColor;
+
+            out vec4 outColor;
+            void main()
+            {
+                vec3 final = vec3(1.0f, newColor.g, newColor.b);
+
+                outColor = vec4(final, 1.0f);
+            }
+            """
+
         self.shaderProgram = OpenGL.GL.shaders.compileProgram(
             OpenGL.GL.shaders.compileShader(vertex_shader, OpenGL.GL.GL_VERTEX_SHADER),
             OpenGL.GL.shaders.compileShader(fragment_shader, OpenGL.GL.GL_FRAGMENT_SHADER))
+
+        self.shaderProgram2 = OpenGL.GL.shaders.compileProgram(
+            OpenGL.GL.shaders.compileShader(vertex_shader, OpenGL.GL.GL_VERTEX_SHADER),
+            OpenGL.GL.shaders.compileShader(fragment_shader2, OpenGL.GL.GL_FRAGMENT_SHADER))
 
     def setupVAO(self, gpuShape):
         glBindVertexArray(gpuShape.vao)
@@ -301,6 +318,23 @@ class SimpleTextureTransformShaderProgram:
             }
             """
 
+        fragment_shader3 = """
+            #version 130
+
+            in vec2 outTexCoords;
+
+            out vec4 outColor;
+
+            uniform sampler2D samplerTex;
+
+            void main()
+            {
+                outColor = texture(samplerTex, outTexCoords) - vec4(0,0,0,0.2);
+            }
+            """
+
+        
+
         # Compiling our shader program
         self.shaderProgram = OpenGL.GL.shaders.compileProgram(
             OpenGL.GL.shaders.compileShader(vertex_shader, GL_VERTEX_SHADER),
@@ -310,6 +344,11 @@ class SimpleTextureTransformShaderProgram:
         self.shaderProgram2 = OpenGL.GL.shaders.compileProgram(
             OpenGL.GL.shaders.compileShader(vertex_shader, GL_VERTEX_SHADER),
             OpenGL.GL.shaders.compileShader(fragment_shader2, GL_FRAGMENT_SHADER))
+
+        # Compiling our shader program
+        self.shaderProgram3 = OpenGL.GL.shaders.compileProgram(
+            OpenGL.GL.shaders.compileShader(vertex_shader, GL_VERTEX_SHADER),
+            OpenGL.GL.shaders.compileShader(fragment_shader3, GL_FRAGMENT_SHADER))
 
 
     def setupVAO(self, gpuShape):
