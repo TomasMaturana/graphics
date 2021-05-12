@@ -1,5 +1,3 @@
-""" P3 [Drive simulator] """
-
 import glfw
 import OpenGL.GL.shaders
 import numpy as np
@@ -375,7 +373,10 @@ if __name__ == "__main__":
                 player.infectedToZombie(P)
                 if len(controller.humansOut)>=H: # humans to enter to scene
                     for i in range(H):
-                        controller.humansOut[0].reset(infectedProb)
+                        controller.humansOut[0].outOfScene=0
+                        controller.humansOut[0].pos[1] = -(1+np.random.randint(50)/100)*(-1 + 2*controller.humansOut[0].actual_direction)
+                        controller.humansOut[0].zombie=0
+                        controller.humansOut[0].infected=np.random.choice([0, 1], p=[1-infectedProb, infectedProb])
                         controller.texScene.childs.append(controller.humansOut[0].model)
                         if controller.humansOut[0].infected:
                             controller.glassesScene.childs.append(controller.humansOut[0].model)
@@ -383,7 +384,10 @@ if __name__ == "__main__":
                         controller.humansOut.remove(controller.humansOut[0])
                 if len(controller.zombiesOut)>=Z: # zombies to enter to scene
                     for i in range(Z):
-                        controller.humansOut[0].reset(infectedProb)
+                        controller.zombiesOut[0].outOfScene=0
+                        controller.zombiesOut[0].pos[1] = -(1+np.random.randint(50)/100)*(-1 + 2*controller.zombiesOut[0].actual_direction)
+                        controller.zombiesOut[0].zombie=1
+                        controller.zombiesOut[0].infected=1
                         controller.texScene.childs.append(controller.zombiesOut[0].model)
                         controller.zombiesIn.append(controller.zombiesOut[0])
                         controller.zombiesOut.remove(controller.zombiesOut[0])
@@ -447,5 +451,13 @@ if __name__ == "__main__":
     gameOverNode1.clear()
     youWinNode2.clear()
     gameOverNode2.clear()
+    for hum in controller.humansIn:
+        hum.model.clear()
+    for hum in controller.humansOut:
+        hum.model.clear()
+    for zom in controller.zombiesIn:
+        zom.model.clear()
+    for zom in controller.zombiesOut:
+        zom.model.clear()
     
     glfw.terminate()

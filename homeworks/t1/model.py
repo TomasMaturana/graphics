@@ -5,12 +5,12 @@ import numpy as np
 import grafica.transformations as tr
 
 class Player():
-    # Clase que contiene al modelo del player / auro
+    # Clase que contiene al modelo del player
     def __init__(self, size, vel):
         self.pos = [0.9, -0.5] # Posicion en el escenario
         self.vel = [vel/2,vel] # Velocidad de desplazamiento
         self.model = None # Referencia al grafo de escena asociado
-        self.controller = None # Referencia del controlador, para acceder a sus variables
+        self.controller = None # controller reference, to access to their variables
         self.size = size # Escala a aplicar al nodo 
         self.radio = 0.02 # distancia para realiozar los calculos de colision
         self.actual_sprite = [1, 1, 1, 1]  # sprint number --> [down, up, right, left]
@@ -32,8 +32,6 @@ class Player():
         self.controller = new_controller
 
     def update(self, delta):
-        # Se actualiza la posicion del auto
-
         # Si detecta la tecla [D] presionada se mueve hacia la derecha
         if self.controller.is_d_pressed and self.pos[0] < 0.9:
             self.pos[0] += self.vel[0] * delta
@@ -62,7 +60,7 @@ class Player():
 
     def collision(self, someonesList):
         for someone in someonesList:
-            # si la distancia a la carga es menor que la suma de los radios ha ocurrido en la colision
+            # if the distance to someone is minor than their radios summatory, then collision
             if ((self.radio+someone.radio)**2 > ((self.pos[0]- someone.pos[0])**2 + (self.pos[1]-someone.pos[1])**2)):
                 if someone.zombie:
                     self.zombie=1
@@ -77,7 +75,7 @@ class Player():
             self.zombie=np.random.choice([0, 1], p=[1-P, P])
         if self.zombie:
             self.controller.gameover=-1
-            print("falta infection")
+            print("fatal infection")
 
     
 class Human():
@@ -94,7 +92,7 @@ class Human():
         self.stepsToWalk = 1 # number of iterations to change between left and right direction
         self.Xdirection = 0 # 0: left, 1: right
         self.outOfScene = 1 # 1 if the shape is out of the scene
-        self.controller = None # Referencia del controlador, para acceder a sus variables
+        self.controller = None # controller reference, to access to their variables
         self.zombie = isZombie # 1 if actually is a zombie (to change the sprint)
         self.wasHuman = wasHuman # 1 if at first was a human (to recicle object)
         if isZombie:
@@ -103,12 +101,10 @@ class Human():
             self.infected = infected
 
     def set_model(self, new_model, sprite):
-        # Se obtiene una referencia a uno nodo
         self.model = new_model
         self.sprite = sprite
 
     def set_controller(self, new_controller):
-        # Se obtiene la referncia al controller
         self.controller = new_controller
 
     def update(self, delta):
@@ -137,8 +133,7 @@ class Human():
             
             self.stepsToWalk-=1
 
-            # Se le aplica la transformacion de traslado segun la posicion actual
-            # self.model.childs= [self.sprite[(self.actual_direction + (self.zombie * 2) - (self.zombie * 2 *self.wasHuman*self.controller.glasses))][int(self.actual_sprite - 1*self.wasHuman*self.controller.glasses)]]
+            # translation transformation is applied, according to the actual position
             self.model.childs= [self.sprite[(self.actual_direction + (self.zombie * 2) )][int(self.actual_sprite)]]
         self.model.transform = tr.matmul([tr.translate(self.pos[0], self.pos[1], 0), tr.scale(self.size/2, self.size, 1)])
     
@@ -155,47 +150,35 @@ class Human():
                 elif collision and someone.infected and not self.infected:
                     self.infected=1 
                     self.controller.glassesScene.childs.append(self.model)
-        return
+                    
 
     def infectedToZombie(self, P): # human infected is converted to zombie with P probability
         if self.wasHuman and self.infected and not self.zombie:
             self.zombie=np.random.choice([0, 1], p=[1-P, P])
         if self.model in self.controller.glassesScene.childs and self.zombie:
             self.controller.glassesScene.childs.remove(self.model)
-
-    def reset(self, infectedProb):
-        self.outOfScene=0
-        self.pos[1] = -(1+np.random.randint(50)/100)*(-1 + 2*self.actual_direction)
-        if self.wasHuman:
-            self.zombie=0
-            self.infected=np.random.choice([0, 1], p=[1-infectedProb, infectedProb])
-        else:
-            self.infected=1
         
 
 class Aura():
-    # Clase para contener las caracteristicas de un objeto que representa una carga 
+    # class to contain the variables of an Aura object (checkpoint to win)
     def __init__(self, posx, posy, size):
         self.pos = [posx, posy]
         self.radio = 0.05
-        self.model = None # Referencia al grafo de escena asociado
-        self.size = size # Escala a aplicar al nodo 
-        self.controller = None # Referencia del controlador, para acceder a sus variables
+        self.model = None # scene graph asociated reference
+        self.size = size # scale to apply to the node
+        self.controller = None # controller reference, to access to their variables
 
     def set_model(self, new_model):
-        # Se obtiene una referencia a uno nodo
         self.model = new_model
 
     def set_controller(self, new_controller):
-        # Se obtiene la referncia al controller
         self.controller = new_controller
 
     def collision(self, someonesList):
-        # Funcion para detectar las colisiones con las cargas
+        # to detect collisions with players
 
-        # Se recorren las cargas 
         for someone in someonesList:
-            # si la distancia a la carga es menor que la suma de los radios ha ocurrido en la colision
+            # if the distance to someone is minor than their radios summatory, then collision
             if ((self.radio+someone.radio)**2 > ((self.pos[0]- someone.pos[0])**2 + (self.pos[1]-someone.pos[1])**2)):
                 self.controller.gameover=1
                 return

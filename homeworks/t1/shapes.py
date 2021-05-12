@@ -6,7 +6,6 @@ from OpenGL.GL import *
 import grafica.basic_shapes as bs
 import grafica.easy_shaders as es
 import grafica.transformations as tr
-import grafica.ex_curves as cv
 import grafica.scene_graph as sg
 
 def createGPUShape(shape, pipeline):
@@ -25,79 +24,11 @@ def createTextureGPUShape(shape, pipeline, path, sWrapMode=GL_CLAMP_TO_EDGE, tWr
         path, sWrapMode, tWrapMode, minFilterMode, maxFilterMode)
     return gpuShape
 
-def createColorTriangle(r, g, b):
-    # Funcion para crear un triangulo con un color personalizado
-
-    # Defining the location and colors of each vertex  of the shape
-    vertices = [
-    #   positions        colors
-        -0.5, -0.5, 0.0,  r, g, b,
-         0.5, -0.5, 0.0,  r, g, b,
-         0.0,  0.5, 0.0,  r, g, b]
-
-    # Defining connections among vertices
-    # We have a triangle every 3 indices specified
-    indices = [0, 1, 2]
-
-    return bs.Shape(vertices, indices)
-
-def createColorCircle(N, r, g, b):
-    # Funcion para crear un circulo con un color personalizado
-    # Poligono de N lados 
-
-    # First vertex at the center, white color
-    vertices = [0, 0, 0, r, g, b]
-    indices = []
-
-    dtheta = 2 * math.pi / N
-
-    for i in range(N):
-        theta = i * dtheta
-
-        vertices += [
-            # vertex coordinates
-            0.5 * math.cos(theta), 0.5 * math.sin(theta), 0,
-
-            # color generates varying between 0 and 1
-                  r, g, b]
-
-        # A triangle is created using the center, this and the next vertex
-        indices += [0, i, i+1]
-
-    # The final triangle connects back to the second vertex
-    indices += [0, N, 1]
-
-    return bs.Shape(vertices, indices)
-
-def createColorCircle2(N, r,g,b, rad=0.5):
-
-    # First vertex at the center
-    # vertices = [rad* math.cos(N), rad* math.cos(N), 0, r, g, b]
-    vertices = []
-    indices = []
-
-    dtheta = 2 * math.pi / N
-
-    for i in range(N):
-        theta = i * dtheta
-
-        vertices += [
-            # vertex coordinates
-            rad * math.cos(theta), rad * math.sin(theta), 0, r, g, b]
-
-        # A triangle is created using the center, this and the next vertex
-        if(i):
-            indices += [i-1, i]
-
-    # The final triangle connects back to the second vertex
-    indices += [N-1, 0]
-
-    return bs.Shape(vertices, indices)
 
 def createSpriteShapes(quadTexX, quadTexY, pipeline, path, ximgs, yimgs):
-    # Creamos una lista para guardar todas las gpu shapes necesarias
+    # a list to save all needed gpushapes
     shapes = []
-    # Creamos una gpushape por cada frame de textura
+    # one gpushape per texture frame
     for j in range(yimgs):
         shapesY = []
         for i in range(ximgs):
@@ -116,13 +47,11 @@ def createSpriteShapes(quadTexX, quadTexY, pipeline, path, ximgs, yimgs):
 
 
 def createScene(pipeline):
-    # Funcion que crea la escena de la pregunta 2
-
-    # Se crean las shapes en GPU
+    # shapes in GPU
     gpuGrayQuad = createGPUShape(bs.createColorQuadXY(0.6, 0.6, 0.6), pipeline) # gray street shape
     gpuWhiteQuad = createGPUShape(bs.createColorQuadXY(1,1,1), pipeline) # white paint for street shape, 
     gpuBrownQuad = createGPUShape(bs.createColorQuadXY(0.5,0.3,0.1), pipeline) # tree trunk shape, roof store shape
-    gpuGreenCircle = createGPUShape(createColorCircle(30, 0.4, 0.8, 0.1), pipeline) # green three leaves shape
+    gpuGreenCircle = createGPUShape(bs.createColorCircle(30, 0.4, 0.8, 0.1), pipeline) # green three leaves shape
     gpuLightBlueQuad = createGPUShape(bs.createColorQuadXY(0.65,0.9,1), pipeline) # window and door store shape 
     gpuApricotQuad = createGPUShape(bs.createColorQuadXY(1,0.7,0.4), pipeline) # store wall shape 
     gpuLightGrayQuad = createGPUShape(bs.createColorQuadXY(0.8, 0.8, 0.8), pipeline) # gray metal shape
@@ -286,7 +215,7 @@ def createScene(pipeline):
     storeNode.transform = tr.matmul([tr.translate(-0.83, 0.3, 0), tr.scale(0.5, 1, 1)])
     storeNode.childs = [facadeNode, roofNode]
 
-    # Nodo padre de la escena
+    # world node
     sceneNode = sg.SceneGraphNode("world")
     sceneNode.childs = [streetNode1, streetNode2, treeNode1, treeNode2, treeNode3, treeNode4, treeNode5, storeNode]
 
@@ -294,9 +223,9 @@ def createScene(pipeline):
 
 
 def createPlayerCircle(pipeline):
-    gpuPlayerCircle = createGPUShape(createColorCircle2(30, 1, 1, 1), pipeline) # 
+    gpuPlayerCircle = createGPUShape(bs.createColorCircle2(30, 1, 1, 1), pipeline) # 
     scales=[0.2,0.3]
-    # player circle node
+
     circleNode1 = sg.SceneGraphNode("playerCircle1")
     circleNode1.transform = tr.matmul([tr.scale(scales[0], scales[1], 1)])
     circleNode1.childs = [gpuPlayerCircle]
@@ -313,6 +242,7 @@ def createPlayerCircle(pipeline):
     circleNode4.transform = tr.matmul([tr.scale(scales[0]/2.5, scales[1]/2.5, 1)])
     circleNode4.childs = [gpuPlayerCircle]
 
+    # player circle node
     playerCircleNode = sg.SceneGraphNode("playerCircle")
     playerCircleNode.transform = tr.matmul([tr.translate(0.9, -0.55, 0)])
     playerCircleNode.childs = [circleNode1, circleNode2, circleNode3, circleNode4]
