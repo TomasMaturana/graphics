@@ -18,6 +18,120 @@ __author__ = "Daniel Calderon"
 __license__ = "MIT"
 
 ############################################################################
+########################################################################################################################################################
+def createGPUShape(shape, pipeline):
+    # Funcion Conveniente para facilitar la inicializacion de un GPUShape
+    gpuShape = es.GPUShape().initBuffers()
+    pipeline.setupVAO(gpuShape)
+    gpuShape.fillBuffers(shape.vertices, shape.indices, GL_STATIC_DRAW)
+    return gpuShape
+
+def generateT(t):
+    return np.array([[1, t, t**2, t**3]]).T
+
+
+def createShip(pipeline):
+    # Se crean las shapes en GPU
+    gpuShip = createGPUShape(createColorPyramid(0.4, 0.2, 0), pipeline) 
+    gpuSail = createGPUShape(bs.createRGBTriangle(0.9, 0.9, 1), pipeline) 
+
+    baseNode= sg.SceneGraphNode("base")
+    baseNode.childs = [gpuShip]
+    baseNode.transform = tr.rotationY(np.pi)
+    
+    sailNode= sg.SceneGraphNode("sail")
+    sailNode.childs = [gpuSail]
+    sailNode.transform = tr.matmul([tr.translate(0, 0.4, 0.25), tr.scale(0.5, 0.5, 1), tr.rotationY(np.pi/2)])
+
+    # Node
+    shipNode = sg.SceneGraphNode("ship")
+    shipNode.childs = [baseNode, sailNode]
+    return shipNode
+
+
+def catmullRomMatrix(P1, P2, P3, P4):
+    
+    # Generate a matrix concatenating the columns
+    G = np.concatenate((P1, P2, P3, P4), axis=1)
+    
+    # Hermite base matrix is a constant
+    Mcr = (1/2)*np.array([[0, -1, 2, -1], [2, 0, -5, 3], [0, 1, 4, -3], [0, 0, -1, 1]])    
+    
+    return np.matmul(G, Mcr)
+
+
+def evalCurve(N, plusY=0):
+    # Funcion para generar N puntos entre 0 y 1 de una curva personalizada
+
+    # Puntos 
+    P0 = np.array([[-7, -2+plusY, 0.02]]).T
+    P1 = np.array([[-5, -4+plusY, 0.02]]).T
+    P2 = np.array([[-1, -2+plusY, 0.02]]).T
+    P3 = np.array([[1, 3+plusY, 0.02]]).T
+    P4 = np.array([[5, 5+plusY, 0.02]]).T
+    P5 = np.array([[7, 3+plusY, 0.02]]).T
+    # Matrices de Hermite y Beziers
+    H_cr1 = catmullRomMatrix(P0, P1, P2, P3)
+    H_cr2 = catmullRomMatrix(P1, P2, P3, P4)
+    H_cr3 = catmullRomMatrix(P2, P3, P4, P5)
+
+    # Arreglo de numeros entre 0 y 1
+    ts = np.linspace(0.0, 1.0, N//3)
+    offset = N//3 
+    
+    # The computed value in R3 for each sample will be stored here
+    curve = np.ndarray(shape=(len(ts) * 3, 3), dtype=float)
+    
+    # Se llenan los puntos de la curva
+    for i in range(len(ts)):
+        T = generateT(ts[i])
+        curve[i, 0:3] = np.matmul(H_cr1, T).T
+        curve[i + offset, 0:3] = np.matmul(H_cr2, T).T
+        curve[i + 2*offset, 0:3] = np.matmul(H_cr3, T).T
+        
+    return curve
+
+def createColorRiver(r, g, b):
+    # Crea un shape del chasis de un auto a partir de una curva personalizada
+    vertices = []
+    indices = []
+    curve1 = evalCurve(96) # Se obtienen los puntos de la curva
+    curve2 = evalCurve(96, plusY=1) # Se obtienen los puntos de la curva
+    delta = 1 / len(curve1) # distancia del step /paso
+    x_0 = -0.5 # Posicion x inicial de la recta inferior
+    y_0 = -0.2 # Posicion y inicial de la recta inferior
+    counter = 0 # Contador de vertices, para indicar los indices
+
+    # Se generan los vertices
+    for i in range(len(curve1)-1):
+        c_0 = curve1[i] # punto i de la curva
+        r_0 = curve2[i] # punto i de la recta
+        c_1 = curve1[i + 1] # punto i + 1 de la curva
+        r_1 = curve2[i+1] # punto i + 1 de la recta
+        vertices += [c_0[0], c_0[1], 0, r + 0.2, g + 0.2, b + 0.2]
+        vertices += [r_0[0], r_0[1], 0, r, g, b]
+        vertices += [c_1[0], c_1[1], 0, r + 0.1, g + 0.1, b + 0.1]
+        vertices += [r_1[0], r_1[1], 0, r, g, b]
+        indices += [counter + 0, counter +1, counter + 2]
+        indices += [counter + 2, counter + 3, counter + 1]
+        counter += 4
+
+    return bs.Shape(vertices, indices)
+
+
+def createRiver(pipeline):
+    # Se crean las shapes en GPU
+    gpuRiver = createGPUShape(createColorRiver(0, 0.2, 0.9), pipeline) 
+
+    # Node
+    riverNode = sg.SceneGraphNode("river")
+    riverNode.childs = [gpuRiver]
+    return riverNode
+
+
+
+########################################################################################################################################################
+############################################################################
 
 def createColorPyramid(r, g ,b):
 
@@ -161,9 +275,12 @@ def create_decorations(pipeline):
     house = create_house(pipeline)
     house.transform = tr.translate(0, 0.5, 0)
 
+    river = createRiver(pipeline)
+    river.transform = tr.matmul([tr.translate(0, -0.3, 0.001), tr.scale(0.2, 0.15, 1)])
+
     decorations = sg.SceneGraphNode("decorations")
     decorations.transform = tr.identity()
-    decorations.childs += [tree1, tree2, tree3, tree4, tree5, house]    
+    decorations.childs += [river, tree1, tree2, tree3, tree4, tree5, house]    
 
     return decorations
 
@@ -174,6 +291,7 @@ def create_decorations(pipeline):
 class Controller:
     def __init__(self):
         self.fillPolygon = True
+        self.ship = False
 ###########################################################
         self.theta = np.pi
         self.eye = [0, 0, 0.1]
@@ -194,6 +312,9 @@ def on_key(window, key, scancode, action, mods):
 
     if key == glfw.KEY_SPACE:
         controller.fillPolygon = not controller.fillPolygon
+
+    if key == glfw.KEY_H:
+        controller.ship = not controller.ship
 
     elif key == glfw.KEY_ESCAPE:
         glfw.set_window_should_close(window, True)
@@ -250,11 +371,15 @@ if __name__ == "__main__":
     decorations = create_decorations(colorShaderProgram)
     skybox = create_skybox(textureShaderProgram)
     floor = create_floor(textureShaderProgram)
+    ship = createShip(colorShaderProgram)
+    shipCurve = evalCurve(96, plusY=0.5)
 
 ###########################################################################################
 
     # View and projection
     projection = tr.perspective(60, float(width)/float(height), 0.1, 100)
+    stepStep=0
+    curveStep=0
 
     while not glfw.window_should_close(window):
         # Using GLFW to check for input events
@@ -286,6 +411,14 @@ if __name__ == "__main__":
         #glUniformMatrix4fv(glGetUniformLocation(colorShaderProgram.shaderProgram, "model"), 1, GL_TRUE, tr.identity())
 
         sg.drawSceneGraphNode(decorations, colorShaderProgram, "model")
+
+        if controller.ship:
+            if(stepStep==50):
+                stepStep=0
+                curveStep=(curveStep+1)%96
+            ship.transform = tr.matmul([tr.translate(shipCurve[curveStep][0]*0.2, (shipCurve[curveStep][1]*0.15) -0.3, 0.03), tr.scale(0.1, 0.1, 0.1)])
+            sg.drawSceneGraphNode(ship, colorShaderProgram, "model")
+            stepStep+=1
 
         # Drawing dice (with texture, another shader program)
         glUseProgram(textureShaderProgram.shaderProgram)
