@@ -13,7 +13,6 @@ import grafica.transformations as tr
 import grafica.basic_shapes as bs
 import grafica.easy_shaders as es
 import grafica.performance_monitor as pm
-import grafica.lighting_shaders as ls
 
 __author__ = "Daniel Calderon"
 __license__ = "MIT"
@@ -43,28 +42,13 @@ def on_key(window, key, scancode, action, mods):
         glfw.set_window_should_close(window, True)
 
 
-def fun1(x, y, a, b):
-    return np.cos(x)-15
-
-def fun2(x, y, a, b):
-    return np.cos(y)
-
-def fun3(x, y, a, b):
-    return (np.cos(y/10)+np.cos(x/10))*15
-
-
-def fun(x, y, a, b):
-    return fun1(x, y, a, b) + fun2(x, y, a, b) + fun3(x, y, a, b)
-    # if abs(x)>8 or abs(y)>8:
-    #     return abs(np.sin(x)*np.cos(y)-y/b*a*0.2)
-    # elif x<0:
-    #     return abs(np.sin(x*0.4)*np.sin(y*0.4)*a*b)*1.5 +1.5 
-    # elif x>0 or y>0:
-    #     return np.sin(x)*np.cos(y)*3-x/b*a*0.1+1.5
-    # else:
-    #     return -((x*x*0.5) / (a*a) + (y*x*0.5) / (b*x)) +1.5
-
-
+"""
+    x^2   y^2
+z = --- + ---
+    a^2   b^2
+"""
+def paraboloid(x, y, a, b):
+    return (x*x) / (a*a) + (y*y) / (b*b)
 
 
 def generateMesh(xs, ys, function, color):
@@ -78,21 +62,8 @@ def generateMesh(xs, ys, function, color):
             x = xs[i]
             y = ys[j]
             z = function(x, y)
-            p1=np.array([x,y,z])
-
-            x0 = xs[i-1]
-            y0 = ys[j-1]
-            z0 = function(x0, y0)
-            p0=np.array([x0,y0,z0])
-
-            x2 = xs[(i+1)%len(xs)]
-            y2 = ys[(j+1)%len(ys)]
-            z2 = function(x2, y2)
-            p2=np.array([x2,y2,z2])
             
-            N=np.cross((p1-p0),(p2-p0))/np.linalg.norm(np.cross((p1-p0),(p2-p0)))
-
-            vertices += [x, y, z] + [z*color[0]/4,z*color[1]/4,z*color[2]/4] + [N[0],N[1],N[2]]
+            vertices += [x, y, z] + color
 
     # The previous loops generates full columns j-y and then move to
     # the next i-x. Hence, the index for each vertex i,j can be computed as
@@ -123,8 +94,8 @@ if __name__ == "__main__":
     if not glfw.init():
         glfw.set_window_should_close(window, True)
 
-    width = 900
-    height = 900
+    width = 600
+    height = 600
     title = "Height Plotter"
     window = glfw.create_window(width, height, title, None, None)
 
@@ -140,10 +111,8 @@ if __name__ == "__main__":
     # Assembling the shader program
     pipeline = es.SimpleModelViewProjectionShaderProgram()
 
-    flatPipeline = ls.SimpleFlatShaderProgram()
-
     # Telling OpenGL to use our shader program
-    glUseProgram(flatPipeline.shaderProgram)
+    glUseProgram(pipeline.shaderProgram)
 
     # Setting up the clear screen color
     glClearColor(0.85, 0.85, 0.85, 1.0)
@@ -155,17 +124,17 @@ if __name__ == "__main__":
     # Creating shapes on GPU memory
     cpuAxis = bs.createAxis(7)
     gpuAxis = es.GPUShape().initBuffers()
-    flatPipeline.setupVAO(gpuAxis)
+    pipeline.setupVAO(gpuAxis)
     gpuAxis.fillBuffers(cpuAxis.vertices, cpuAxis.indices, GL_STATIC_DRAW)
 
-    meshCurve = lambda x, y: fun(x, y, 1.0, 1.0)
+    simpleParaboloid = lambda x, y: paraboloid(x, y, 3.0, 3.0)
 
     # generate a numpy array with 40 samples between -10 and 10
-    xs = np.ogrid[-10:10:100j]
-    ys = np.ogrid[-10:10:100j]
-    cpuSurface = generateMesh(xs, ys, meshCurve, [1,1,0])
+    xs = np.ogrid[-10:10:20j]
+    ys = np.ogrid[-10:10:20j]
+    cpuSurface = generateMesh(xs, ys, simpleParaboloid, [1,0,0])
     gpuSurface = es.GPUShape().initBuffers()
-    flatPipeline.setupVAO(gpuSurface)
+    pipeline.setupVAO(gpuSurface)
     gpuSurface.fillBuffers(cpuSurface.vertices, cpuSurface.indices, GL_STATIC_DRAW)
 
     t0 = glfw.get_time()
@@ -209,38 +178,16 @@ if __name__ == "__main__":
             np.array([0,0,1])
         )
 
-        # Setting all uniform shader variables
-
-        # White light in all components: ambient, diffuse and specular.
-        glUniform3f(glGetUniformLocation(flatPipeline.shaderProgram, "La"), 1.0, 1.0, 1.0)
-        glUniform3f(glGetUniformLocation(flatPipeline.shaderProgram, "Ld"), 1.0, 1.0, 1.0)
-        glUniform3f(glGetUniformLocation(flatPipeline.shaderProgram, "Ls"), 1.0, 1.0, 1.0)
-
-        # Object is barely visible at only ambient. Diffuse behavior is slightly red. Sparkles are white
-        glUniform3f(glGetUniformLocation(flatPipeline.shaderProgram, "Ka"), 0.2, 0.2, 0.2)
-        glUniform3f(glGetUniformLocation(flatPipeline.shaderProgram, "Kd"), 0.5, 0.5, 0.5)
-        glUniform3f(glGetUniformLocation(flatPipeline.shaderProgram, "Ks"), 1.0, 1.0, 1.0)
-
-        # TO DO: Explore different parameter combinations to understand their effect!
-
-        glUniform3f(glGetUniformLocation(flatPipeline.shaderProgram, "lightPosition"), 10, 10, 2)
-        glUniform3f(glGetUniformLocation(flatPipeline.shaderProgram, "viewPosition"), viewPos[0], viewPos[1], viewPos[2])
-        glUniform1ui(glGetUniformLocation(flatPipeline.shaderProgram, "shininess"), 100)
-        
-        glUniform1f(glGetUniformLocation(flatPipeline.shaderProgram, "constantAttenuation"), 0.0001)
-        glUniform1f(glGetUniformLocation(flatPipeline.shaderProgram, "linearAttenuation"), 0.03)
-        glUniform1f(glGetUniformLocation(flatPipeline.shaderProgram, "quadraticAttenuation"), 0.01)
-
-        glUniformMatrix4fv(glGetUniformLocation(flatPipeline.shaderProgram, "view"), 1, GL_TRUE, view)
+        glUniformMatrix4fv(glGetUniformLocation(pipeline.shaderProgram, "view"), 1, GL_TRUE, view)
 
         # Setting up the projection transform
         projection = tr.perspective(60, float(width)/float(height), 0.1, 100)
-        glUniformMatrix4fv(glGetUniformLocation(flatPipeline.shaderProgram, "projection"), 1, GL_TRUE, projection)
+        glUniformMatrix4fv(glGetUniformLocation(pipeline.shaderProgram, "projection"), 1, GL_TRUE, projection)
 
         # Clearing the screen in both, color and depth
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT)
 
-        glUniformMatrix4fv(glGetUniformLocation(flatPipeline.shaderProgram, "model"), 1, GL_TRUE, tr.identity())
+        glUniformMatrix4fv(glGetUniformLocation(pipeline.shaderProgram, "model"), 1, GL_TRUE, tr.identity())
         pipeline.drawCall(gpuAxis, GL_LINES)
 
         # Filling or not the shapes depending on the controller state
@@ -250,7 +197,7 @@ if __name__ == "__main__":
             glPolygonMode(GL_FRONT_AND_BACK, GL_LINE)
 
         # Drawing shapes with different model transformations
-        glUniformMatrix4fv(glGetUniformLocation(flatPipeline.shaderProgram, "model"), 1, GL_TRUE, tr.uniformScale(0.5))
+        glUniformMatrix4fv(glGetUniformLocation(pipeline.shaderProgram, "model"), 1, GL_TRUE, tr.uniformScale(0.5))
         pipeline.drawCall(gpuSurface)
 
         # Once the drawing is rendered, buffers are swap so an uncomplete drawing is never seen.
