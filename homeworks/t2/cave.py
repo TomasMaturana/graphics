@@ -22,9 +22,10 @@ class PolarCamera:
         # self.up = np.array([0, 0, 1])
         self.theta = np.pi
         self.eye = [0, 0, 0.1]
-        self.at = [0, 1, 0.1]
+        self.at = [0, 0.001, 0.1]
         self.up = [0, 0, 1]
         self.viewMatrix = None
+        #self.groundMesh = None
 
     # def set_theta(self, delta):
     #     self.theta = (self.theta + delta) % (np.pi * 2)
@@ -33,19 +34,30 @@ class PolarCamera:
     #     if ((self.rho + delta) > 0.1):
     #         self.rho += delta
 
-    def set_eye(self, delta):
+    def set_eye(self, delta, mesh):
+        prevEye = self.eye
+        prevAt = self.at
+        ## verificar que eye - prevEye no sea ???? **condiciones de pendiente de suelo y espacio sky - ground
+
+        ############
         atEyeDiff = self.at - self.eye
         self.eye += atEyeDiff * delta
+        self.eye[2] = z_in_pos(mesh, int(self.eye[0]), int(self.eye[1]))+0.1
 
-    def set_at(self, delta):
+    def set_at(self, delta, mesh):
         atEyeDiff = self.at - self.eye
         self.at += atEyeDiff * delta
+        self.at[1] += 0.001
+        self.at[2] = z_in_pos(mesh, int(self.at[0]), int(self.at[1]))
     
     def set_up(self, up):
         self.up = up
 
     def set_theta(self, deltaT):
         self.theta += np.pi*deltaT
+
+    #def set_groundMesh(self, groundMesh):
+    #    self.groundMesh = groundMesh
 
 
     def update_view(self):
@@ -119,7 +131,7 @@ class Controller:
 
 
     #Funcion que recibe el input para manejar la camara
-    def update_camera(self, delta):
+    def update_camera(self, delta, mesh):
         if self.is_left_pressed:
             self.polar_camera.set_theta(2 * delta)
 
@@ -127,12 +139,12 @@ class Controller:
             self.polar_camera.set_theta(-2 * delta)
 
         if self.is_up_pressed:
-            self.polar_camera.set_eye(5 * delta)
-            self.polar_camera.set_at(5 * delta)
+            self.polar_camera.set_eye(5 * delta, mesh)
+            self.polar_camera.set_at(5 * delta, mesh)
 
         if self.is_down_pressed:
-            self.polar_camera.set_eye(-5 * delta)
-            self.polar_camera.set_at(-5 * delta)
+            self.polar_camera.set_eye(-5 * delta, mesh)
+            self.polar_camera.set_at(-5 * delta, mesh)
 
 if __name__ == "__main__":
 
@@ -158,6 +170,7 @@ if __name__ == "__main__":
     glfw.make_context_current(window)
 
     controller = Controller()
+
     # Connecting the callback function 'on_key' to handle keyboard events
     glfw.set_key_callback(window, controller.on_key)
 
@@ -187,9 +200,10 @@ if __name__ == "__main__":
     # # tex_sphere = createTexSphereNode(phongTexPipeline)
 
     #groundMesh = createTextureMesh(map[0], N)
-    caveScene = createTexMeshNodes(phongTexPipeline, map, N, "img/stone.png", texture_path)
-
-
+    caveScene, groundMesh = createTexNodes(phongTexPipeline, map, N, texture_path)
+    
+    #camera=controller.get_camera()
+    #camera.set_groundElevation(map[0])
 
     perfMonitor = pm.PerformanceMonitor(glfw.get_time(), 0.5)
     # glfw will swap buffers as soon as possible
@@ -209,12 +223,12 @@ if __name__ == "__main__":
         # Using GLFW to check for input events
         glfw.poll_events()
 
-        controller.update_camera(delta)
+        controller.update_camera(delta, groundMesh)
         camera = controller.get_camera()
         viewMatrix = camera.update_view()
 
         # Setting up the projection transform
-        projection = tr.perspective(90, float(width) / float(height), 0.1, 100)
+        projection = tr.perspective(120, float(width) / float(height), 0.1, 100)
 
         # Clearing the screen in both, color and depth
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT)

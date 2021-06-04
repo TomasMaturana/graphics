@@ -22,7 +22,7 @@ def skyFun1(x, y):
         
 
 def groundFun2(x, y):
-    return np.cos(y*np.sin(x))+np.cos(x/50)+5
+    return np.cos(y*np.sin(x/50))+np.cos(x/50)+5
 
 def skyFun2(x, y):
     if x<-45 or y<-45:
