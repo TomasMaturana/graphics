@@ -16,13 +16,13 @@ def createGPUShape(pipeline, shape):
     gpuShape.fillBuffers(shape.vertices, shape.indices, GL_STATIC_DRAW)
     return gpuShape
 
-def createTextureGPUShape(shape, pipeline, path):
+def createTextureGPUShape(shape, pipeline, path, glMode=GL_CLAMP_TO_EDGE):
     # Funcion Conveniente para facilitar la inicializacion de un GPUShape con texturas
     gpuShape = es.GPUShape().initBuffers()
     pipeline.setupVAO(gpuShape)
     gpuShape.fillBuffers(shape.vertices, shape.indices, GL_STATIC_DRAW)
     gpuShape.texture = es.textureSimpleSetup(
-        path, GL_CLAMP_TO_EDGE, GL_CLAMP_TO_EDGE, GL_NEAREST, GL_NEAREST)
+        path, glMode, glMode, GL_LINEAR, GL_LINEAR)
     return gpuShape
 
 def createScene(pipeline):
@@ -286,8 +286,8 @@ def createTextureMesh(npyZMesh, npyTexIndex, N):
             texMesh.add_face(vertexs[v2], vertexs[v3], vertexs[v0])
             texMesh.set_texcoord2D(vertexs[v0], [texNum*npyTexIndex[i,j], 0.0])
             texMesh.set_texcoord2D(vertexs[v1], [texNum*npyTexIndex[i,j]+texNum, 0.0])
-            texMesh.set_texcoord2D(vertexs[v2], [texNum*npyTexIndex[i,j]+texNum, 1.0])
-            texMesh.set_texcoord2D(vertexs[v3], [texNum*npyTexIndex[i,j], 1.0])
+            texMesh.set_texcoord2D(vertexs[v2], [texNum*npyTexIndex[i,j]+texNum, 1.1])
+            texMesh.set_texcoord2D(vertexs[v3], [texNum*npyTexIndex[i,j], 1.1])
 
     return texMesh
 
@@ -295,8 +295,8 @@ def createTextureMesh(npyZMesh, npyTexIndex, N):
 def createTexNodes(pipeline, npyMesh, N, texture_path):
     groundMesh = createTextureMesh(npyMesh[0], npyMesh[2], N)
     skyMesh = createTextureMesh(npyMesh[1], npyMesh[3], N)
-    groundMeshShape = createTextureGPUShape(meshToShape(groundMesh, textured=True), pipeline, texture_path)
-    skyMeshShape = createTextureGPUShape(meshToShape(skyMesh, textured=True), pipeline, texture_path)
+    groundMeshShape = createTextureGPUShape(meshToShape(groundMesh, textured=True), pipeline, texture_path, glMode=GL_REPEAT)
+    skyMeshShape = createTextureGPUShape(meshToShape(skyMesh, textured=True), pipeline, texture_path, glMode=GL_REPEAT)
 
     groundNode = sg.SceneGraphNode("ground")
     groundNode.transform =tr.matmul([
@@ -316,7 +316,7 @@ def createTexNodes(pipeline, npyMesh, N, texture_path):
     caveNode.transform = tr.scale(1, 1, 1)
     caveNode.childs = [groundNode, skyNode]
 
-    return caveNode, groundMesh
+    return caveNode, groundMesh, skyMesh
 
 
 def meshToShape(mesh, color=None, textured=False, verbose=False):

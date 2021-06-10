@@ -14,41 +14,40 @@ import sys
 
 class PolarCamera:
     def __init__(self):
-        # self.center = np.array([0.0, 0.0, -0.5])
-        # self.theta = 0
-        # self.rho = 5
-        # self.eye = np.array([0.0, 0.0, 0.0])
-        # self.height = 0.5
-        # self.up = np.array([0, 0, 1])
         self.theta = np.pi
-        self.eye = [0, 0, 0.1]
-        self.at = [0, 0.001, 0.1]
+        self.eye = [0, 0, 0]
+        self.at = [0, 0.1, 0]
         self.up = [0, 0, 1]
         self.viewMatrix = None
-        #self.groundMesh = None
 
-    # def set_theta(self, delta):
-    #     self.theta = (self.theta + delta) % (np.pi * 2)
+    def set_eye_at_simple(self, eye, at):
+        self.eye=eye
+        self.at=at
 
-    # def set_rho(self, delta):
-    #     if ((self.rho + delta) > 0.1):
-    #         self.rho += delta
-
-    def set_eye(self, delta, mesh):
-        prevEye = self.eye
-        prevAt = self.at
+    def set_eye(self, delta, mesh, skyMesh):
         ## verificar que eye - prevEye no sea ???? **condiciones de pendiente de suelo y espacio sky - ground
-
-        ############
         atEyeDiff = self.at - self.eye
-        self.eye += atEyeDiff * delta
-        self.eye[2] = z_in_pos(mesh, int(self.eye[0]), int(self.eye[1]))+0.1
+        newEye = self.eye + (atEyeDiff * delta)
+        newEye[2] = z_in_pos(mesh, int(newEye[0]), int(newEye[1]))
+
+        # if sky - ground < lara height
+        newSkyZ=z_in_pos(skyMesh, int(newEye[0]), int(newEye[1]))
+        if (newSkyZ-newEye[2])<1:
+           return False
+
+        # if next z >> actual z
+        if abs(newEye[2]-self.eye[2]) >1:
+            return False
+
+        self.eye = newEye
+
 
     def set_at(self, delta, mesh):
         atEyeDiff = self.at - self.eye
         self.at += atEyeDiff * delta
-        self.at[1] += 0.001
-        self.at[2] = z_in_pos(mesh, int(self.at[0]), int(self.at[1]))
+        #self.at[1] += 0.001
+        self.at[2] = z_in_pos(mesh, int(self.eye[0]), int(self.eye[1]))
+
     
     def set_up(self, up):
         self.up = up
@@ -56,15 +55,8 @@ class PolarCamera:
     def set_theta(self, deltaT):
         self.theta += np.pi*deltaT
 
-    #def set_groundMesh(self, groundMesh):
-    #    self.groundMesh = groundMesh
-
 
     def update_view(self):
-
-        # self.eye[0] = self.rho * np.sin(self.theta) + self.center[0]
-        # self.eye[1] = self.rho * np.cos(self.theta) + self.center[1]
-        # self.eye[2] = self.height + self.center[2]
         at_x = self.eye[0] + np.cos(self.theta)
         at_y = self.eye[1] + np.sin(self.theta)
         self.at = np.array([at_x, at_y, self.at[2]])
@@ -85,6 +77,8 @@ class Controller:
         self.is_down_pressed = False
         self.is_left_pressed = False
         self.is_right_pressed = False
+
+        self.torch_lvl= 4
 
         self.polar_camera = PolarCamera()
 
@@ -129,22 +123,40 @@ class Controller:
             if action == glfw.PRESS:
                 self.showAxis = not self.showAxis
 
+        elif key == glfw.KEY_1:
+            if action == glfw.PRESS:
+                self.torch_lvl = 4
+
+        elif key == glfw.KEY_2:
+            if action == glfw.PRESS:
+                self.torch_lvl = 2
+        
+        elif key == glfw.KEY_3:
+            if action == glfw.PRESS:
+                self.torch_lvl = 1
+
+        elif key == glfw.KEY_0:
+            if action == glfw.PRESS:
+                self.torch_lvl = 15
+
 
     #Funcion que recibe el input para manejar la camara
-    def update_camera(self, delta, mesh):
+    def update_camera(self, delta, mesh, skyMesh, doit=False):
         if self.is_left_pressed:
             self.polar_camera.set_theta(2 * delta)
 
         if self.is_right_pressed:
             self.polar_camera.set_theta(-2 * delta)
 
-        if self.is_up_pressed:
-            self.polar_camera.set_eye(5 * delta, mesh)
-            self.polar_camera.set_at(5 * delta, mesh)
+        if self.is_up_pressed or doit:
+            resEye=self.polar_camera.set_eye(4 * delta, mesh, skyMesh)
+            if resEye:
+                self.polar_camera.set_at(5 * delta, mesh)
 
         if self.is_down_pressed:
-            self.polar_camera.set_eye(-5 * delta, mesh)
-            self.polar_camera.set_at(-5 * delta, mesh)
+            resEye=self.polar_camera.set_eye(-5 * delta, mesh, skyMesh)
+            if resEye:
+                self.polar_camera.set_at(-4 * delta, mesh)
 
 if __name__ == "__main__":
 
@@ -176,7 +188,7 @@ if __name__ == "__main__":
 
      # Different shader programs for different lighting strategies
     phongPipeline = nl.MultiplePhongShaderProgram()
-    phongTexPipeline = nl.MultipleTexturePhongShaderProgram()
+    phongTexPipeline = nl.SimplePhongTextureDirectionalShaderProgram()
 
     # This shader program does not consider lighting
     mvpPipeline = es.SimpleModelViewProjectionShaderProgram()
@@ -200,7 +212,7 @@ if __name__ == "__main__":
     # # tex_sphere = createTexSphereNode(phongTexPipeline)
 
     #groundMesh = createTextureMesh(map[0], N)
-    caveScene, groundMesh = createTexNodes(phongTexPipeline, map, N, texture_path)
+    caveScene, groundMesh, skyMesh = createTexNodes(phongTexPipeline, map, N, texture_path)
     
     #camera=controller.get_camera()
     #camera.set_groundElevation(map[0])
@@ -212,6 +224,11 @@ if __name__ == "__main__":
     r = 0.5
     g = 0
     b = 0.25
+    print(sys.argv[1])
+    if sys.argv[1] == "map1.npy":
+        controller.get_camera().set_eye_at_simple([10, -40, 7.001], [10, -40.001, 7])
+    elif sys.argv[1] == "map2.npy":
+        controller.get_camera().set_eye_at_simple([0, 0, 7.1], [0, 1, 7])
 
     # Application loop
     while not glfw.window_should_close(window):
@@ -223,8 +240,9 @@ if __name__ == "__main__":
         # Using GLFW to check for input events
         glfw.poll_events()
 
-        controller.update_camera(delta, groundMesh)
+        controller.update_camera(delta, groundMesh, skyMesh)
         camera = controller.get_camera()
+
         viewMatrix = camera.update_view()
 
         # Setting up the projection transform
@@ -249,7 +267,7 @@ if __name__ == "__main__":
 
         lightingPipeline = phongPipeline
         #lightposition = [1*np.cos(t1), 1*np.sin(t1), 2.3]
-        lightposition = [0, 0, 50]
+        lightposition = camera.at
 
         #r = np.abs(((0.5*t1+0.00) % 2)-1)
         #g = np.abs(((0.5*t1+0.33) % 2)-1)
@@ -257,27 +275,27 @@ if __name__ == "__main__":
 
         # Setting all uniform shader variables
         
-        glUseProgram(lightingPipeline.shaderProgram)
-        # White light in all components: ambient, diffuse and specular.
-        glUniform3f(glGetUniformLocation(lightingPipeline.shaderProgram, "La"), 0.25, 0.25, 0.25)
-        glUniform3f(glGetUniformLocation(lightingPipeline.shaderProgram, "Ld"), 0.5, 0.5, 0.5)
-        glUniform3f(glGetUniformLocation(lightingPipeline.shaderProgram, "Ls"), 1.0, 1.0, 1.0)
+        # glUseProgram(lightingPipeline.shaderProgram)
+        # # White light in all components: ambient, diffuse and specular.
+        # glUniform3f(glGetUniformLocation(lightingPipeline.shaderProgram, "La"), 0.25, 0.25, 0.25)
+        # glUniform3f(glGetUniformLocation(lightingPipeline.shaderProgram, "Ld"), 0.5, 0.5, 0.5)
+        # glUniform3f(glGetUniformLocation(lightingPipeline.shaderProgram, "Ls"), 1.0, 1.0, 1.0)
 
-        # Object is barely visible at only ambient. Diffuse behavior is slightly red. Sparkles are white
-        glUniform3f(glGetUniformLocation(lightingPipeline.shaderProgram, "Ka"), 0.2, 0.2, 0.2)
-        glUniform3f(glGetUniformLocation(lightingPipeline.shaderProgram, "Kd"), 0.5, 0.5, 0.5)
-        glUniform3f(glGetUniformLocation(lightingPipeline.shaderProgram, "Ks"), 1.0, 1.0, 1.0)
+        # # Object is barely visible at only ambient. Diffuse behavior is slightly red. Sparkles are white
+        # glUniform3f(glGetUniformLocation(lightingPipeline.shaderProgram, "Ka"), 0.2, 0.2, 0.2)
+        # glUniform3f(glGetUniformLocation(lightingPipeline.shaderProgram, "Kd"), 0.5, 0.5, 0.5)
+        # glUniform3f(glGetUniformLocation(lightingPipeline.shaderProgram, "Ks"), 1.0, 1.0, 1.0)
 
-        glUniform3f(glGetUniformLocation(lightingPipeline.shaderProgram, "viewPosition"), camera.eye[0], camera.eye[1], camera.eye[2])
-        glUniform1ui(glGetUniformLocation(lightingPipeline.shaderProgram, "shininess"), 100)
+        # glUniform3f(glGetUniformLocation(lightingPipeline.shaderProgram, "viewPosition"), camera.eye[0], camera.eye[1], camera.eye[2])
+        # glUniform1ui(glGetUniformLocation(lightingPipeline.shaderProgram, "shininess"), 100)
         
-        glUniform1f(glGetUniformLocation(lightingPipeline.shaderProgram, "constantAttenuation"), 0.01)
-        glUniform1f(glGetUniformLocation(lightingPipeline.shaderProgram, "linearAttenuation"), 0.03)
-        glUniform1f(glGetUniformLocation(lightingPipeline.shaderProgram, "quadraticAttenuation"), 0.05)
+        # glUniform1f(glGetUniformLocation(lightingPipeline.shaderProgram, "constantAttenuation"), 0.01)
+        # glUniform1f(glGetUniformLocation(lightingPipeline.shaderProgram, "linearAttenuation"), 0.03)
+        # glUniform1f(glGetUniformLocation(lightingPipeline.shaderProgram, "quadraticAttenuation"), 0.05)
 
-        glUniformMatrix4fv(glGetUniformLocation(lightingPipeline.shaderProgram, "projection"), 1, GL_TRUE, projection)
-        glUniformMatrix4fv(glGetUniformLocation(lightingPipeline.shaderProgram, "view"), 1, GL_TRUE, viewMatrix)
-        glUniformMatrix4fv(glGetUniformLocation(lightingPipeline.shaderProgram, "model"), 1, GL_TRUE, tr.identity())
+        # glUniformMatrix4fv(glGetUniformLocation(lightingPipeline.shaderProgram, "projection"), 1, GL_TRUE, projection)
+        # glUniformMatrix4fv(glGetUniformLocation(lightingPipeline.shaderProgram, "view"), 1, GL_TRUE, viewMatrix)
+        # glUniformMatrix4fv(glGetUniformLocation(lightingPipeline.shaderProgram, "model"), 1, GL_TRUE, tr.identity())
 
         # Drawing
         #sg.drawSceneGraphNode(scene, lightingPipeline, "model")
@@ -286,20 +304,22 @@ if __name__ == "__main__":
         #sg.drawSceneGraphNode(sphere, lightingPipeline, "model")
         
         glUseProgram(phongTexPipeline.shaderProgram)
-        # White light in all components: ambient, diffuse and specular.
-        glUniform3f(glGetUniformLocation(phongTexPipeline.shaderProgram, "La"), 0.5, 0.5, 0.5)
+        torch=controller.torch_lvl
+
+        glUniform3f(glGetUniformLocation(phongTexPipeline.shaderProgram, "La"), 1.0/torch, 1.0/torch, 1.0/torch)
         glUniform3f(glGetUniformLocation(phongTexPipeline.shaderProgram, "Ld"), 0.5, 0.5, 0.5)
         glUniform3f(glGetUniformLocation(phongTexPipeline.shaderProgram, "Ls"), 1.0, 1.0, 1.0)
 
         # Object is barely visible at only ambient. Diffuse behavior is slightly red. Sparkles are white
-        glUniform3f(glGetUniformLocation(phongTexPipeline.shaderProgram, "Ka"), 0.6, 0.6, 0.6)
-        glUniform3f(glGetUniformLocation(phongTexPipeline.shaderProgram, "Kd"), 0.5, 0.5, 0.5)
+        glUniform3f(glGetUniformLocation(phongTexPipeline.shaderProgram, "Ka"), 1.0, 1.0, 1.0)
+        glUniform3f(glGetUniformLocation(phongTexPipeline.shaderProgram, "Kd"), 1.0, 1.0, 1.0)
         glUniform3f(glGetUniformLocation(phongTexPipeline.shaderProgram, "Ks"), 1.0, 1.0, 1.0)
 
+        glUniform3f(glGetUniformLocation(phongTexPipeline.shaderProgram, "lightPosition"), lightposition[0], lightposition[1], lightposition[2])
         glUniform3f(glGetUniformLocation(phongTexPipeline.shaderProgram, "viewPosition"), camera.eye[0], camera.eye[1], camera.eye[2])
         glUniform1ui(glGetUniformLocation(phongTexPipeline.shaderProgram, "shininess"), 100)
         
-        glUniform1f(glGetUniformLocation(phongTexPipeline.shaderProgram, "constantAttenuation"), 0.001)
+        glUniform1f(glGetUniformLocation(phongTexPipeline.shaderProgram, "constantAttenuation"), 0.01)
         glUniform1f(glGetUniformLocation(phongTexPipeline.shaderProgram, "linearAttenuation"), 0.03)
         glUniform1f(glGetUniformLocation(phongTexPipeline.shaderProgram, "quadraticAttenuation"), 0.01)
 

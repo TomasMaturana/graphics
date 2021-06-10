@@ -57,7 +57,7 @@ def fun(x, y, a, b):
     if abs(y)>40:
         return np.sin(y/20)*15
     else:
-        return np.cos(y*np.sin(x/50))+np.cos(x/50)+5
+        return (50-np.sqrt(x*x+y*y)*0.8)*0.5-2*np.cos(x)+np.sin(y)+10
 
 
 
