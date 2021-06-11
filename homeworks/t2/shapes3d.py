@@ -284,10 +284,15 @@ def createTextureMesh(npyZMesh, npyTexIndex, N):
 
             texMesh.add_face(vertexs[v0], vertexs[v1], vertexs[v2])
             texMesh.add_face(vertexs[v2], vertexs[v3], vertexs[v0])
-            texMesh.set_texcoord2D(vertexs[v0], [texNum*npyTexIndex[i,j], 0.0])
-            texMesh.set_texcoord2D(vertexs[v1], [texNum*npyTexIndex[i,j]+texNum, 0.0])
-            texMesh.set_texcoord2D(vertexs[v2], [texNum*npyTexIndex[i,j]+texNum, 1.1])
-            texMesh.set_texcoord2D(vertexs[v3], [texNum*npyTexIndex[i,j], 1.1])
+            ifV0= (texMesh.texcoord2D(vertexs[v0])[0] != None) and (texMesh.texcoord2D(vertexs[v0])[1] != None)
+            ifV1= (texMesh.texcoord2D(vertexs[v1])[0] != None) and (texMesh.texcoord2D(vertexs[v1])[1] != None)
+            ifV2= (texMesh.texcoord2D(vertexs[v2])[0] != None) and (texMesh.texcoord2D(vertexs[v2])[1] != None)
+            ifV3= (texMesh.texcoord2D(vertexs[v3])[0] != None) and (texMesh.texcoord2D(vertexs[v3])[1] != None)
+            if ifV0 and ifV1 and ifV2 and ifV3:
+                texMesh.set_texcoord2D(vertexs[v0], [texNum*npyTexIndex[i,j], 0.0])
+                texMesh.set_texcoord2D(vertexs[v1], [texNum*npyTexIndex[i,j]+texNum, 0.0])
+                texMesh.set_texcoord2D(vertexs[v2], [texNum*npyTexIndex[i,j]+texNum, 1.1])
+                texMesh.set_texcoord2D(vertexs[v3], [texNum*npyTexIndex[i,j], 1.1])
 
     return texMesh
 

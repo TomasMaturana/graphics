@@ -9,14 +9,16 @@ import grafica.performance_monitor as pm
 import grafica.lighting_shaders as ls
 import grafica.scene_graph as sg
 from shapes3d import *
-import newLightShaders as nl
+from shapes import *
+from model import *
+import grafica.newLightShaders as nl
 import sys
 
 class PolarCamera:
     def __init__(self):
         self.theta = np.pi
         self.eye = [0, 0, 0]
-        self.at = [0, 0.1, 0]
+        self.at = [0, 0, 0]
         self.up = [0, 0, 1]
         self.viewMatrix = None
 
@@ -25,7 +27,6 @@ class PolarCamera:
         self.at=at
 
     def set_eye(self, delta, mesh, skyMesh):
-        ## verificar que eye - prevEye no sea ???? **condiciones de pendiente de suelo y espacio sky - ground
         atEyeDiff = self.at - self.eye
         newEye = self.eye + (atEyeDiff * delta)
         newEye[2] = z_in_pos(mesh, int(newEye[0]), int(newEye[1]))
@@ -151,10 +152,10 @@ class Controller:
         if self.is_up_pressed or doit:
             resEye=self.polar_camera.set_eye(4 * delta, mesh, skyMesh)
             if resEye:
-                self.polar_camera.set_at(5 * delta, mesh)
+                self.polar_camera.set_at(4 * delta, mesh)
 
         if self.is_down_pressed:
-            resEye=self.polar_camera.set_eye(-5 * delta, mesh, skyMesh)
+            resEye=self.polar_camera.set_eye(-4 * delta, mesh, skyMesh)
             if resEye:
                 self.polar_camera.set_at(-4 * delta, mesh)
 
@@ -169,7 +170,7 @@ if __name__ == "__main__":
     if not glfw.init():
         glfw.set_window_should_close(window, True)
 
-    width = 800
+    width = 1600
     height = 800
     title = "T2 A: Lara Jones"
 
@@ -187,8 +188,18 @@ if __name__ == "__main__":
     glfw.set_key_callback(window, controller.on_key)
 
      # Different shader programs for different lighting strategies
-    phongPipeline = nl.MultiplePhongShaderProgram()
+    #phongPipeline = nl.MultiplePhongShaderProgram()
     phongTexPipeline = nl.SimplePhongTextureDirectionalShaderProgram()
+    ##############################################################################
+    tex_pipeline = es.SimpleTextureTransformShaderProgram()
+    player_shapes= createSpriteShapes(0.5, 0.5, tex_pipeline, "img/walk.png", 7, 1)
+    playerNode = sg.SceneGraphNode("player")
+    # player model instance
+    player = Player(1)
+    # Se indican las referencias del nodo y el controller al modelo
+    player.set_model(playerNode, player_shapes)
+    player.set_controller(controller)
+
 
     # This shader program does not consider lighting
     mvpPipeline = es.SimpleModelViewProjectionShaderProgram()
@@ -201,7 +212,7 @@ if __name__ == "__main__":
     glEnable(GL_DEPTH_TEST)
 
     # Creating shapes on GPU memory
-    gpuAxis = createGPUShape(mvpPipeline, bs.createAxis(4))
+    #gpuAxis = createGPUShape(mvpPipeline, bs.createAxis(4))
 
     # # gpuRedCube = createGPUShape(phongPipeline, bs.createColorNormalsCube(1,0,0))
 
@@ -211,11 +222,8 @@ if __name__ == "__main__":
     # # sphere = createSphereNode(0.3, 0.3, 0.3, phongPipeline)
     # # tex_sphere = createTexSphereNode(phongTexPipeline)
 
-    #groundMesh = createTextureMesh(map[0], N)
     caveScene, groundMesh, skyMesh = createTexNodes(phongTexPipeline, map, N, texture_path)
     
-    #camera=controller.get_camera()
-    #camera.set_groundElevation(map[0])
 
     perfMonitor = pm.PerformanceMonitor(glfw.get_time(), 0.5)
     # glfw will swap buffers as soon as possible
@@ -225,10 +233,11 @@ if __name__ == "__main__":
     g = 0
     b = 0.25
     print(sys.argv[1])
+    camera=controller.get_camera()
     if sys.argv[1] == "map1.npy":
-        controller.get_camera().set_eye_at_simple([10, -40, 7.001], [10, -40.001, 7])
+        controller.polar_camera.set_eye_at_simple([10, -40, 7], [10, -40, 7])
     elif sys.argv[1] == "map2.npy":
-        controller.get_camera().set_eye_at_simple([0, 0, 7.1], [0, 1, 7])
+        controller.polar_camera.set_eye_at_simple([0, 0, 7], [0, 0, 7])
 
     # Application loop
     while not glfw.window_should_close(window):
@@ -258,16 +267,17 @@ if __name__ == "__main__":
             glPolygonMode(GL_FRONT_AND_BACK, GL_LINE)
 
         # The axis is drawn without lighting effects
-        if controller.showAxis:
-            glUseProgram(mvpPipeline.shaderProgram)
-            glUniformMatrix4fv(glGetUniformLocation(mvpPipeline.shaderProgram, "projection"), 1, GL_TRUE, projection)
-            glUniformMatrix4fv(glGetUniformLocation(mvpPipeline.shaderProgram, "view"), 1, GL_TRUE, viewMatrix)
-            glUniformMatrix4fv(glGetUniformLocation(mvpPipeline.shaderProgram, "model"), 1, GL_TRUE, tr.identity())
-            mvpPipeline.drawCall(gpuAxis, GL_LINES)
+        # if controller.showAxis:
+        #     glUseProgram(mvpPipeline.shaderProgram)
+        #     glUniformMatrix4fv(glGetUniformLocation(mvpPipeline.shaderProgram, "projection"), 1, GL_TRUE, projection)
+        #     glUniformMatrix4fv(glGetUniformLocation(mvpPipeline.shaderProgram, "view"), 1, GL_TRUE, viewMatrix)
+        #     glUniformMatrix4fv(glGetUniformLocation(mvpPipeline.shaderProgram, "model"), 1, GL_TRUE, tr.identity())
+        #     mvpPipeline.drawCall(gpuAxis, GL_LINES)
 
-        lightingPipeline = phongPipeline
-        #lightposition = [1*np.cos(t1), 1*np.sin(t1), 2.3]
-        lightposition = camera.at
+        #lightingPipeline = phongPipeline
+        
+        lightposition = camera.at 
+        lightPoint = lightposition + (lightposition - camera.eye)
 
         #r = np.abs(((0.5*t1+0.00) % 2)-1)
         #g = np.abs(((0.5*t1+0.33) % 2)-1)
@@ -310,13 +320,13 @@ if __name__ == "__main__":
         glUniform3f(glGetUniformLocation(phongTexPipeline.shaderProgram, "Ld"), 0.5, 0.5, 0.5)
         glUniform3f(glGetUniformLocation(phongTexPipeline.shaderProgram, "Ls"), 1.0, 1.0, 1.0)
 
-        # Object is barely visible at only ambient. Diffuse behavior is slightly red. Sparkles are white
         glUniform3f(glGetUniformLocation(phongTexPipeline.shaderProgram, "Ka"), 1.0, 1.0, 1.0)
         glUniform3f(glGetUniformLocation(phongTexPipeline.shaderProgram, "Kd"), 1.0, 1.0, 1.0)
         glUniform3f(glGetUniformLocation(phongTexPipeline.shaderProgram, "Ks"), 1.0, 1.0, 1.0)
 
         glUniform3f(glGetUniformLocation(phongTexPipeline.shaderProgram, "lightPosition"), lightposition[0], lightposition[1], lightposition[2])
-        glUniform3f(glGetUniformLocation(phongTexPipeline.shaderProgram, "viewPosition"), camera.eye[0], camera.eye[1], camera.eye[2])
+        glUniform3f(glGetUniformLocation(phongTexPipeline.shaderProgram, "viewPosition"), lightPoint[0], lightPoint[1], lightposition[2])
+        
         glUniform1ui(glGetUniformLocation(phongTexPipeline.shaderProgram, "shininess"), 100)
         
         glUniform1f(glGetUniformLocation(phongTexPipeline.shaderProgram, "constantAttenuation"), 0.01)
@@ -329,12 +339,15 @@ if __name__ == "__main__":
 
         #sg.drawSceneGraphNode(tex_sphere, phongTexPipeline, "model")
         sg.drawSceneGraphNode(caveScene, phongTexPipeline, "model")
+
+        glUseProgram(tex_pipeline.shaderProgram)
+        sg.drawSceneGraphNode(playerNode, tex_pipeline, "transform")
         
         
         # Once the drawing is rendered, buffers are swap so an uncomplete drawing is never seen.
         glfw.swap_buffers(window)
 
-    gpuAxis.clear()
+    #gpuAxis.clear()
     # gpuRedCube.clear()
 
     glfw.terminate()
