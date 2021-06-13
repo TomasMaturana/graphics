@@ -33,11 +33,11 @@ class Camera:
 
         # if sky - ground < lara height
         newSkyZ=z_in_pos(skyMesh, int(newEye[0]), int(newEye[1]))
-        if (newSkyZ-newEye[2])<1:
+        if (newSkyZ-newEye[2])<2:
            return False
 
         # if next z >> actual z
-        if abs(newEye[2]-self.eye[2]) >1:
+        if abs(newEye[2]-self.eye[2]) >2:
             return False
 
         newEye[2] = newEye[2] +0.5
@@ -82,6 +82,9 @@ class Controller:
 
         self.leftClickOn = False
         self.rightClickOn = False
+
+        self.torchPosX = 0
+        self.torchPosY = 0
 
         self.torch_lvl= 4
 
@@ -145,6 +148,25 @@ class Controller:
         elif key == glfw.KEY_0:
             if action == glfw.PRESS:
                 self.torch_lvl = 15
+
+        elif key == glfw.KEY_D:
+            if action == glfw.PRESS:
+                self.torchPosX += 2
+
+        elif key == glfw.KEY_A:
+            if action == glfw.PRESS:
+                self.torchPosX -= 2
+
+        elif key == glfw.KEY_W:
+            if action == glfw.PRESS:
+                self.torchPosY += 2
+
+        elif key == glfw.KEY_S:
+            if action == glfw.PRESS:
+                self.torchPosY -= 2
+
+
+        
 
 
     #Funcion que recibe el input para manejar la camara
@@ -237,21 +259,6 @@ if __name__ == "__main__":
     phongPipeline = nl.MultiplePhongShaderProgram()
     phongTexPipeline = nl.SimplePhongTextureDirectionalShaderProgram()
 
-    ##############################################################################
-    # tex_pipeline = es.SimpleTextureTransformShaderProgram()
-    # player_shapes= createSpriteShapes(0.5, 0.5, tex_pipeline, "img/walk.png", 7, 1)
-    # playerNode = sg.SceneGraphNode("player")
-    # # player model instance
-    # player = Player(1)
-    # # Se indican las referencias del nodo y el controller al modelo
-    # player.set_model(playerNode, player_shapes)
-    # player.set_controller(controller)
-    ##############################################################################
-
-
-    # This shader program does not consider lighting
-    #mvpPipeline = es.SimpleModelViewProjectionShaderProgram()
-
     # Setting up the clear screen color
     glClearColor(0.85, 0.85, 0.85, 1.0)
 
@@ -259,16 +266,17 @@ if __name__ == "__main__":
     # and which one is at the back
     glEnable(GL_DEPTH_TEST)
 
-    # Creating shapes on GPU memory
-    #gpuAxis = createGPUShape(mvpPipeline, bs.createAxis(4))
+    playerNodes=[]
+    for i in range(1,7):
+        playerNodex = createPlayerCube(phongTexPipeline, "img/walk.png", 1/7*i, 1/7*(i+1))
+        playerNodes.append(playerNodex)
 
-    # # gpuRedCube = createGPUShape(phongPipeline, bs.createColorNormalsCube(1,0,0))
-
-    # # scene = createScene(phongPipeline)
-    # # cube1 = createCube1(phongPipeline)
-    # # cube2 = createCube2(phongPipeline)
-    # # sphere = createSphereNode(0.3, 0.3, 0.3, phongPipeline)
-    playerNode = createPlayerCube(phongTexPipeline, "img/walk.png")
+    playerNode = sg.SceneGraphNode("player")
+    # player model instance
+    player = Player(1)
+    # Se indican las referencias del nodo y el controller al modelo
+    player.set_model(playerNode, playerNodes)
+    player.set_controller(controller)
 
     caveScene, groundMesh, skyMesh = createTexNodes(phongTexPipeline, map, N, texture_path)
     
@@ -282,10 +290,12 @@ if __name__ == "__main__":
     b = 0.25
     print(sys.argv[1])
     camera=controller.get_camera()
-    if sys.argv[1] == "map1.npy":
+    if sys.argv[1] == "map2.npy":
         controller.camera.set_eye_at_simple([10, -40, 7], [10, -40, 7])
-    elif sys.argv[1] == "map2.npy":
+    elif sys.argv[1] == "map1.npy":
         controller.camera.set_eye_at_simple([0, 0, 7], [0, 0, 7])
+
+    stepsCounter=0
 
     # Application loop
     while not glfw.window_should_close(window):
@@ -300,21 +310,18 @@ if __name__ == "__main__":
         glEnable(GL_BLEND)
         glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA)
 
-        normalizedMousePos = (
-            controller.mousePos[0] / width,
-            controller.mousePos[1] / height
-        )
-
         controller.update_camera(delta, groundMesh, skyMesh)
         camera = controller.get_camera()
 
         viewMatrix = camera.update_view()
 
-        playerNode.transform = tr.matmul([
+        playerNodeTransform = tr.matmul([
             tr.translate(camera.at[0], camera.at[1], camera.eye[2]),
-            #tr.rotationZ(np.pi*0.15),
-            tr.scale(1,1,1)
+            tr.scale(0.2,0.2,0.2)
         ])
+        if controller.rightClickOn or controller.leftClickOn or controller.is_up_pressed or controller.is_down_pressed:
+            stepsCounter +=1
+        player.update(playerNodeTransform, stepsCounter)
 
         # Setting up the projection transform
         projection = tr.perspective(90, float(width) / float(height), 0.1, 100)
@@ -328,72 +335,31 @@ if __name__ == "__main__":
         else:
             glPolygonMode(GL_FRONT_AND_BACK, GL_LINE)
 
-        # The axis is drawn without lighting effects
-        # if controller.showAxis:
-        #     glUseProgram(mvpPipeline.shaderProgram)
-        #     glUniformMatrix4fv(glGetUniformLocation(mvpPipeline.shaderProgram, "projection"), 1, GL_TRUE, projection)
-        #     glUniformMatrix4fv(glGetUniformLocation(mvpPipeline.shaderProgram, "view"), 1, GL_TRUE, viewMatrix)
-        #     glUniformMatrix4fv(glGetUniformLocation(mvpPipeline.shaderProgram, "model"), 1, GL_TRUE, tr.identity())
-        #     mvpPipeline.drawCall(gpuAxis, GL_LINES)
-
-        #lightingPipeline = phongPipeline
         
-        lightposition = np.array([camera.at[0], camera.at[1], camera.eye[2]])
-        lightPoint = lightposition + 1*(lightposition - camera.eye)
+        lightposition = np.array([camera.at[0], camera.at[1], camera.at[2]])
+        lightPoint1 = lightposition + 1*(lightposition - camera.eye)
+        lightPoint = np.array([lightPoint1[0]+controller.torchPosX, lightPoint1[1]+controller.torchPosY, lightPoint1[2]])
 
-        #r = np.abs(((0.5*t1+0.00) % 2)-1)
-        #g = np.abs(((0.5*t1+0.33) % 2)-1)
-        #b = np.abs(((0.5*t1+0.66) % 2)-1)
-
-        # Setting all uniform shader variables
-        
-        # glUseProgram(lightingPipeline.shaderProgram)
-        # # White light in all components: ambient, diffuse and specular.
-        # glUniform3f(glGetUniformLocation(lightingPipeline.shaderProgram, "La"), 0.25, 0.25, 0.25)
-        # glUniform3f(glGetUniformLocation(lightingPipeline.shaderProgram, "Ld"), 0.5, 0.5, 0.5)
-        # glUniform3f(glGetUniformLocation(lightingPipeline.shaderProgram, "Ls"), 1.0, 1.0, 1.0)
-
-        # # Object is barely visible at only ambient. Diffuse behavior is slightly red. Sparkles are white
-        # glUniform3f(glGetUniformLocation(lightingPipeline.shaderProgram, "Ka"), 0.2, 0.2, 0.2)
-        # glUniform3f(glGetUniformLocation(lightingPipeline.shaderProgram, "Kd"), 0.5, 0.5, 0.5)
-        # glUniform3f(glGetUniformLocation(lightingPipeline.shaderProgram, "Ks"), 1.0, 1.0, 1.0)
-
-        # glUniform3f(glGetUniformLocation(lightingPipeline.shaderProgram, "viewPosition"), camera.eye[0], camera.eye[1], camera.eye[2])
-        # glUniform1ui(glGetUniformLocation(lightingPipeline.shaderProgram, "shininess"), 100)
-        
-        # glUniform1f(glGetUniformLocation(lightingPipeline.shaderProgram, "constantAttenuation"), 0.01)
-        # glUniform1f(glGetUniformLocation(lightingPipeline.shaderProgram, "linearAttenuation"), 0.03)
-        # glUniform1f(glGetUniformLocation(lightingPipeline.shaderProgram, "quadraticAttenuation"), 0.05)
-
-        # glUniformMatrix4fv(glGetUniformLocation(lightingPipeline.shaderProgram, "projection"), 1, GL_TRUE, projection)
-        # glUniformMatrix4fv(glGetUniformLocation(lightingPipeline.shaderProgram, "view"), 1, GL_TRUE, viewMatrix)
-        # glUniformMatrix4fv(glGetUniformLocation(lightingPipeline.shaderProgram, "model"), 1, GL_TRUE, tr.identity())
-
-        # Drawing
-        #sg.drawSceneGraphNode(scene, lightingPipeline, "model")
-        #sg.drawSceneGraphNode(cube1, lightingPipeline, "model")
-        #sg.drawSceneGraphNode(cube2, lightingPipeline, "model")
-        #sg.drawSceneGraphNode(sphere, lightingPipeline, "model")
         
         glUseProgram(phongTexPipeline.shaderProgram)
         torch=controller.torch_lvl
 
-        glUniform3f(glGetUniformLocation(phongTexPipeline.shaderProgram, "La"), 1.0/torch, 1.0/torch, 1.0/torch)
+        glUniform3f(glGetUniformLocation(phongTexPipeline.shaderProgram, "La"), 0.2/torch, 0.2/torch, 0.2/torch)
         glUniform3f(glGetUniformLocation(phongTexPipeline.shaderProgram, "Ld"), 0.5, 0.5, 0.5)
         glUniform3f(glGetUniformLocation(phongTexPipeline.shaderProgram, "Ls"), 1.0, 1.0, 1.0)
 
-        glUniform3f(glGetUniformLocation(phongTexPipeline.shaderProgram, "Ka"), 1.0, 1.0, 1.0)
+        glUniform3f(glGetUniformLocation(phongTexPipeline.shaderProgram, "Ka"), 1.0/torch, 1.0/torch, 1.0/torch)
         glUniform3f(glGetUniformLocation(phongTexPipeline.shaderProgram, "Kd"), 1.0, 1.0, 1.0)
         glUniform3f(glGetUniformLocation(phongTexPipeline.shaderProgram, "Ks"), 1.0, 1.0, 1.0)
 
         glUniform3f(glGetUniformLocation(phongTexPipeline.shaderProgram, "lightPosition"), lightposition[0], lightposition[1], lightposition[2])
         glUniform3f(glGetUniformLocation(phongTexPipeline.shaderProgram, "viewPosition"), lightPoint[0], lightPoint[1], lightposition[2])
         
-        glUniform1ui(glGetUniformLocation(phongTexPipeline.shaderProgram, "shininess"), int(100/torch))
+        glUniform1ui(glGetUniformLocation(phongTexPipeline.shaderProgram, "shininess"), 10)
         
-        glUniform1f(glGetUniformLocation(phongTexPipeline.shaderProgram, "constantAttenuation"), 0.01)
-        glUniform1f(glGetUniformLocation(phongTexPipeline.shaderProgram, "linearAttenuation"), 0.03)
-        glUniform1f(glGetUniformLocation(phongTexPipeline.shaderProgram, "quadraticAttenuation"), 0.01)
+        glUniform1f(glGetUniformLocation(phongTexPipeline.shaderProgram, "constantAttenuation"), 0.1)
+        glUniform1f(glGetUniformLocation(phongTexPipeline.shaderProgram, "linearAttenuation"), 0.3)
+        glUniform1f(glGetUniformLocation(phongTexPipeline.shaderProgram, "quadraticAttenuation"), 0.1)
 
         glUniformMatrix4fv(glGetUniformLocation(phongTexPipeline.shaderProgram, "projection"), 1, GL_TRUE, projection)
         glUniformMatrix4fv(glGetUniformLocation(phongTexPipeline.shaderProgram, "view"), 1, GL_TRUE, viewMatrix)

@@ -26,8 +26,8 @@ def createTextureGPUShape(shape, pipeline, path, glMode=GL_CLAMP_TO_EDGE):
     return gpuShape
 
 
-def createPlayerCube(pipeline, image_path):
-    gpuPlayerCube = createTextureGPUShape(bs.createTextureNormalsCubeX(image_path, 0, 1/7), pipeline, image_path)
+def createPlayerCube(pipeline, image_path, x0, x1):
+    gpuPlayerCube = createTextureGPUShape(bs.createTextureNormalsCubeX(image_path, x0, x1), pipeline, image_path)
 
     playerCubeNode = sg.SceneGraphNode("playerCube")
     playerCubeNode.childs = [gpuPlayerCube]
@@ -45,158 +45,6 @@ def createPlayerCube(pipeline, image_path):
 
     return scaledObject
 
-def createCube2(pipeline):
-    gpuGrayCube = createGPUShape(pipeline, bs.createColorNormalsCube(0.5, 0.5, 0.5))
-
-    grayCubeNode = sg.SceneGraphNode("grayCube")
-    grayCubeNode.childs = [gpuGrayCube]
-
-    objectNode = sg.SceneGraphNode("object1")
-    objectNode.transform = tr.matmul([
-        tr.translate(-0.25,-0.15,-0.35),
-        tr.rotationZ(np.pi*-0.2),
-        tr.scale(0.3,0.3,0.3)
-    ])
-    objectNode.childs = [grayCubeNode]
-
-    scaledObject = sg.SceneGraphNode("object1")
-    scaledObject.transform = tr.scale(5, 5, 5)
-    scaledObject.childs = [objectNode]
-
-    return scaledObject
-
-def createColorNormalSphere(N, r, g, b):
-
-    vertices = []
-    indices = []
-    dTheta = 2 * np.pi /N
-    dPhi = 2 * np.pi /N
-    r = 0.5
-    c = 0
-
-    for i in range(N - 1):
-        theta = i * dTheta
-        theta1 = (i + 1) * dTheta
-        for j in range(N):
-            phi = j*dPhi
-            phi1 = (j+1)*dPhi
-            v0 = [r*np.sin(theta)*np.cos(phi), r*np.sin(theta)*np.sin(phi), r*np.cos(theta)]
-            v1 = [r*np.sin(theta1)*np.cos(phi), r*np.sin(theta1)*np.sin(phi), r*np.cos(theta1)]
-            v2 = [r*np.sin(theta1)*np.cos(phi1), r*np.sin(theta1)*np.sin(phi1), r*np.cos(theta1)]
-            v3 = [r*np.sin(theta)*np.cos(phi1), r*np.sin(theta)*np.sin(phi1), r*np.cos(theta)]
-            n0 = [np.sin(theta)*np.cos(phi), np.sin(theta)*np.sin(phi), np.cos(theta)]
-            n1 = [np.sin(theta1)*np.cos(phi), np.sin(theta1)*np.sin(phi), np.cos(theta1)]
-            n2 = [np.sin(theta1)*np.cos(phi1), np.sin(theta1)*np.sin(phi1), np.cos(theta1)]
-            n3 = [np.sin(theta)*np.cos(phi1), np.sin(theta)*np.sin(phi1), np.cos(theta)]
-
-
-            # Creamos los quad superiores
-            if i == 0:
-                vertices += [v0[0], v0[1], v0[2], r, g, b, n0[0], n0[1], n0[2]]
-                vertices += [v1[0], v1[1], v1[2], r, g, b, n1[0], n1[1], n1[2]]
-                vertices += [v2[0], v2[1], v2[2], r, g, b, n2[0], n2[1], n2[2]]
-                indices += [ c + 0, c + 1, c +2 ]
-                c += 3
-            # Creamos los quads inferiores
-            elif i == (N-2):
-                vertices += [v0[0], v0[1], v0[2], r, g, b, n0[0], n0[1], n0[2]]
-                vertices += [v1[0], v1[1], v1[2], r, g, b, n1[0], n1[1], n1[2]]
-                vertices += [v3[0], v3[1], v3[2], r, g, b, n3[0], n3[1], n3[2]]
-                indices += [ c + 0, c + 1, c +2 ]
-                c += 3
-            
-            # Creamos los quads intermedios
-            else: 
-                vertices += [v0[0], v0[1], v0[2], r, g, b, n0[0], n0[1], n0[2]]
-                vertices += [v1[0], v1[1], v1[2], r, g, b, n1[0], n1[1], n1[2]]
-                vertices += [v2[0], v2[1], v2[2], r, g, b, n2[0], n2[1], n2[2]]
-                vertices += [v3[0], v3[1], v3[2], r, g, b, n3[0], n3[1], n3[2]]
-                indices += [ c + 0, c + 1, c +2 ]
-                indices += [ c + 2, c + 3, c + 0 ]
-                c += 4
-    return bs.Shape(vertices, indices)
-
-def createTextureNormalSphere(N):
-    vertices = []
-    indices = []
-    dTheta = 2 * np.pi /N
-    dPhi = 2 * np.pi /N
-    r = 0.5
-    c = 0
-
-    for i in range(N - 1):
-        theta = i * dTheta
-        theta1 = (i + 1) * dTheta
-        for j in range(N):
-            phi = j*dPhi
-            phi1 = (j+1)*dPhi
-            v0 = [r*np.sin(theta)*np.cos(phi), r*np.sin(theta)*np.sin(phi), r*np.cos(theta)]
-            v1 = [r*np.sin(theta1)*np.cos(phi), r*np.sin(theta1)*np.sin(phi), r*np.cos(theta1)]
-            v2 = [r*np.sin(theta1)*np.cos(phi1), r*np.sin(theta1)*np.sin(phi1), r*np.cos(theta1)]
-            v3 = [r*np.sin(theta)*np.cos(phi1), r*np.sin(theta)*np.sin(phi1), r*np.cos(theta)]
-            n0 = [np.sin(theta)*np.cos(phi), np.sin(theta)*np.sin(phi), np.cos(theta)]
-            n1 = [np.sin(theta1)*np.cos(phi), np.sin(theta1)*np.sin(phi), np.cos(theta1)]
-            n2 = [np.sin(theta1)*np.cos(phi1), np.sin(theta1)*np.sin(phi1), np.cos(theta1)]
-            n3 = [np.sin(theta)*np.cos(phi1), np.sin(theta)*np.sin(phi1), np.cos(theta)]
-
-
-            # Creamos los quad superiores
-            if i == 0:
-                vertices += [v0[0], v0[1], v0[2], 0, 1, n0[0], n0[1], n0[2]]
-                vertices += [v1[0], v1[1], v1[2], 1, 1, n1[0], n1[1], n1[2]]
-                vertices += [v2[0], v2[1], v2[2], 0.5, 0, n2[0], n2[1], n2[2]]
-                indices += [ c + 0, c + 1, c +2 ]
-                c += 3
-            # Creamos los quads inferiores
-            elif i == (N-2):
-                vertices += [v0[0], v0[1], v0[2], 0, 0, n0[0], n0[1], n0[2]]
-                vertices += [v1[0], v1[1], v1[2], 0.5, 1, n1[0], n1[1], n1[2]]
-                vertices += [v3[0], v3[1], v3[2], 1, 0, n3[0], n3[1], n3[2]]
-                indices += [ c + 0, c + 1, c +2 ]
-                c += 3
-            
-            # Creamos los quads intermedios
-            else: 
-                vertices += [v0[0], v0[1], v0[2], 0, 0, n0[0], n0[1], n0[2]]
-                vertices += [v1[0], v1[1], v1[2], 0, 1, n1[0], n1[1], n1[2]]
-                vertices += [v2[0], v2[1], v2[2], 1, 1, n2[0], n2[1], n2[2]]
-                vertices += [v3[0], v3[1], v3[2], 0, 1, n3[0], n3[1], n3[2]]
-                indices += [ c + 0, c + 1, c +2 ]
-                indices += [ c + 2, c + 3, c + 0 ]
-                c += 4
-    return bs.Shape(vertices, indices)
-
-def createSphereNode(r, g, b, pipeline):
-    sphere = createGPUShape(pipeline, createColorNormalSphere(20, r,g,b))
-
-    sphereNode = sg.SceneGraphNode("sphere")
-    sphereNode.transform =tr.matmul([
-        tr.translate(0.25,0.15,-0.35),
-        tr.scale(0.3,0.3,0.3)
-    ])
-    sphereNode.childs = [sphere]
-
-    scaledSphere = sg.SceneGraphNode("sc_sphere")
-    scaledSphere.transform = tr.scale(5, 5, 5)
-    scaledSphere.childs = [sphereNode]
-
-    return scaledSphere
-
-def createTexSphereNode(pipeline):
-    sphere = createTextureGPUShape(createTextureNormalSphere(20), pipeline, "img/stone.png")
-
-    sphereNode = sg.SceneGraphNode("sphere")
-    sphereNode.transform =tr.matmul([
-        tr.translate(-0.25,0.25,-0.35),
-        tr.scale(0.3,0.3,0.3)
-    ])
-    sphereNode.childs = [sphere]
-
-    scaledSphere = sg.SceneGraphNode("sc_sphere")
-    scaledSphere.transform = tr.scale(5, 5, 5)
-    scaledSphere.childs = [sphereNode]
-
-    return scaledSphere
 
 ######################################################################################################
 
@@ -239,8 +87,8 @@ def createTextureMesh(npyZMesh, npyTexIndex, N):
             if ifV0 and ifV1 and ifV2 and ifV3:
                 texMesh.set_texcoord2D(vertexs[v3], [texNum*npyTexIndex[i,j], 0.0])
                 texMesh.set_texcoord2D(vertexs[v2], [texNum*npyTexIndex[i,j]+texNum, 0.0])
-                texMesh.set_texcoord2D(vertexs[v1], [texNum*npyTexIndex[i,j]+texNum, 1.1])
-                texMesh.set_texcoord2D(vertexs[v0], [texNum*npyTexIndex[i,j], 1.1])
+                texMesh.set_texcoord2D(vertexs[v1], [texNum*npyTexIndex[i,j]+texNum, 1.0])
+                texMesh.set_texcoord2D(vertexs[v0], [texNum*npyTexIndex[i,j], 1.0])
 
     return texMesh
 
