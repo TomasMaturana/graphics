@@ -7,7 +7,7 @@ import grafica.transformations as tr
 class Player():
     # Clase que contiene al modelo del player
     def __init__(self, size):
-        self.pos = [0.0, 0.0, 0.0] # Posicion en el escenario
+        self.pos = [0.0, 0.0, 7.2] # Posicion en el escenario
         self.model = None # Referencia al grafo de escena asociado
         self.controller = None # controller reference, to access to their variables
         self.size = size # Escala a aplicar al nodo 

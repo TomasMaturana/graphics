@@ -14,7 +14,7 @@ from model import *
 import grafica.newLightShaders as nl
 import sys
 
-class PolarCamera:
+class Camera:
     def __init__(self):
         self.theta = np.pi
         self.eye = [0, 0, 0]
@@ -40,6 +40,7 @@ class PolarCamera:
         if abs(newEye[2]-self.eye[2]) >1:
             return False
 
+        newEye[2] = newEye[2] +0.5
         self.eye = newEye
 
 
@@ -47,7 +48,7 @@ class PolarCamera:
         atEyeDiff = self.at - self.eye
         self.at += atEyeDiff * delta
         #self.at[1] += 0.001
-        self.at[2] = z_in_pos(mesh, int(self.eye[0]), int(self.eye[1]))
+        self.at[2] = z_in_pos(mesh, int(self.at[0]), int(self.at[1]))
 
     
     def set_up(self, up):
@@ -60,7 +61,7 @@ class PolarCamera:
     def update_view(self):
         at_x = self.eye[0] + np.cos(self.theta)
         at_y = self.eye[1] + np.sin(self.theta)
-        self.at = np.array([at_x, at_y, self.at[2]])
+        self.at = np.array([at_x, at_y, self.eye[2]])
 
         viewMatrix = tr.lookAt(
             self.eye,
@@ -79,12 +80,17 @@ class Controller:
         self.is_left_pressed = False
         self.is_right_pressed = False
 
+        self.leftClickOn = False
+        self.rightClickOn = False
+
         self.torch_lvl= 4
 
-        self.polar_camera = PolarCamera()
+        self.camera = Camera()
+
+        self.mousePos = (0.0, 0.0)
 
     def get_camera(self):
-        return self.polar_camera
+        return self.camera
 
     def on_key(self, window, key, scancode, action, mods):
 
@@ -143,21 +149,59 @@ class Controller:
 
     #Funcion que recibe el input para manejar la camara
     def update_camera(self, delta, mesh, skyMesh, doit=False):
-        if self.is_left_pressed:
-            self.polar_camera.set_theta(2 * delta)
+        
+        if self.mousePos[0]<750:
+            self.camera.set_theta(0.4 * delta)
+        if self.mousePos[0]<650:
+            self.camera.set_theta(0.8 * delta)
+        elif self.is_left_pressed or self.mousePos[0]<550:
+            self.camera.set_theta(1.5 * delta)
 
-        if self.is_right_pressed:
-            self.polar_camera.set_theta(-2 * delta)
+        if self.mousePos[0]>850:
+            self.camera.set_theta(-0.4 * delta)
+        if self.mousePos[0]>950:
+            self.camera.set_theta(-0.8 * delta)
+        if self.is_right_pressed or self.mousePos[0]>1050:
+            self.camera.set_theta(-1.5 * delta)
 
-        if self.is_up_pressed or doit:
-            resEye=self.polar_camera.set_eye(4 * delta, mesh, skyMesh)
+        if self.is_up_pressed or self.leftClickOn or doit:
+            resEye=self.camera.set_eye(4 * delta, mesh, skyMesh)
             if resEye:
-                self.polar_camera.set_at(4 * delta, mesh)
+                self.camera.set_at(4 * delta, mesh)
 
-        if self.is_down_pressed:
-            resEye=self.polar_camera.set_eye(-4 * delta, mesh, skyMesh)
+        if self.is_down_pressed or self.rightClickOn:
+            resEye=self.camera.set_eye(-4 * delta, mesh, skyMesh)
             if resEye:
-                self.polar_camera.set_at(-4 * delta, mesh)
+                self.camera.set_at(-4 * delta, mesh)
+
+def cursor_pos_callback(window, x, y):
+    global controller
+    controller.mousePos = (x,y)
+
+def mouse_button_callback(window, button, action, mods):
+
+    global controller
+
+    """
+    glfw.MOUSE_BUTTON_1: left click
+    glfw.MOUSE_BUTTON_2: right click
+    """
+
+    if (action == glfw.PRESS or action == glfw.REPEAT):
+        if (button == glfw.MOUSE_BUTTON_1):
+            controller.leftClickOn = True
+            print("Mouse click - button 1")
+
+        if (button == glfw.MOUSE_BUTTON_2):
+            controller.rightClickOn = True
+            print("Mouse click - button 2:")
+
+    elif (action ==glfw.RELEASE):
+        if (button == glfw.MOUSE_BUTTON_1):
+            controller.leftClickOn = False
+        if (button == glfw.MOUSE_BUTTON_2):
+            controller.rightClickOn = False
+
 
 if __name__ == "__main__":
 
@@ -186,23 +230,27 @@ if __name__ == "__main__":
 
     # Connecting the callback function 'on_key' to handle keyboard events
     glfw.set_key_callback(window, controller.on_key)
+    glfw.set_cursor_pos_callback(window, cursor_pos_callback)
+    glfw.set_mouse_button_callback(window, mouse_button_callback)
 
      # Different shader programs for different lighting strategies
-    #phongPipeline = nl.MultiplePhongShaderProgram()
+    phongPipeline = nl.MultiplePhongShaderProgram()
     phongTexPipeline = nl.SimplePhongTextureDirectionalShaderProgram()
+
     ##############################################################################
-    tex_pipeline = es.SimpleTextureTransformShaderProgram()
-    player_shapes= createSpriteShapes(0.5, 0.5, tex_pipeline, "img/walk.png", 7, 1)
-    playerNode = sg.SceneGraphNode("player")
-    # player model instance
-    player = Player(1)
-    # Se indican las referencias del nodo y el controller al modelo
-    player.set_model(playerNode, player_shapes)
-    player.set_controller(controller)
+    # tex_pipeline = es.SimpleTextureTransformShaderProgram()
+    # player_shapes= createSpriteShapes(0.5, 0.5, tex_pipeline, "img/walk.png", 7, 1)
+    # playerNode = sg.SceneGraphNode("player")
+    # # player model instance
+    # player = Player(1)
+    # # Se indican las referencias del nodo y el controller al modelo
+    # player.set_model(playerNode, player_shapes)
+    # player.set_controller(controller)
+    ##############################################################################
 
 
     # This shader program does not consider lighting
-    mvpPipeline = es.SimpleModelViewProjectionShaderProgram()
+    #mvpPipeline = es.SimpleModelViewProjectionShaderProgram()
 
     # Setting up the clear screen color
     glClearColor(0.85, 0.85, 0.85, 1.0)
@@ -220,7 +268,7 @@ if __name__ == "__main__":
     # # cube1 = createCube1(phongPipeline)
     # # cube2 = createCube2(phongPipeline)
     # # sphere = createSphereNode(0.3, 0.3, 0.3, phongPipeline)
-    # # tex_sphere = createTexSphereNode(phongTexPipeline)
+    playerNode = createPlayerCube(phongTexPipeline, "img/walk.png")
 
     caveScene, groundMesh, skyMesh = createTexNodes(phongTexPipeline, map, N, texture_path)
     
@@ -235,9 +283,9 @@ if __name__ == "__main__":
     print(sys.argv[1])
     camera=controller.get_camera()
     if sys.argv[1] == "map1.npy":
-        controller.polar_camera.set_eye_at_simple([10, -40, 7], [10, -40, 7])
+        controller.camera.set_eye_at_simple([10, -40, 7], [10, -40, 7])
     elif sys.argv[1] == "map2.npy":
-        controller.polar_camera.set_eye_at_simple([0, 0, 7], [0, 0, 7])
+        controller.camera.set_eye_at_simple([0, 0, 7], [0, 0, 7])
 
     # Application loop
     while not glfw.window_should_close(window):
@@ -249,13 +297,27 @@ if __name__ == "__main__":
         # Using GLFW to check for input events
         glfw.poll_events()
 
+        glEnable(GL_BLEND)
+        glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA)
+
+        normalizedMousePos = (
+            controller.mousePos[0] / width,
+            controller.mousePos[1] / height
+        )
+
         controller.update_camera(delta, groundMesh, skyMesh)
         camera = controller.get_camera()
 
         viewMatrix = camera.update_view()
 
+        playerNode.transform = tr.matmul([
+            tr.translate(camera.at[0], camera.at[1], camera.eye[2]),
+            #tr.rotationZ(np.pi*0.15),
+            tr.scale(1,1,1)
+        ])
+
         # Setting up the projection transform
-        projection = tr.perspective(120, float(width) / float(height), 0.1, 100)
+        projection = tr.perspective(90, float(width) / float(height), 0.1, 100)
 
         # Clearing the screen in both, color and depth
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT)
@@ -276,8 +338,8 @@ if __name__ == "__main__":
 
         #lightingPipeline = phongPipeline
         
-        lightposition = camera.at 
-        lightPoint = lightposition + (lightposition - camera.eye)
+        lightposition = np.array([camera.at[0], camera.at[1], camera.eye[2]])
+        lightPoint = lightposition + 1*(lightposition - camera.eye)
 
         #r = np.abs(((0.5*t1+0.00) % 2)-1)
         #g = np.abs(((0.5*t1+0.33) % 2)-1)
@@ -327,7 +389,7 @@ if __name__ == "__main__":
         glUniform3f(glGetUniformLocation(phongTexPipeline.shaderProgram, "lightPosition"), lightposition[0], lightposition[1], lightposition[2])
         glUniform3f(glGetUniformLocation(phongTexPipeline.shaderProgram, "viewPosition"), lightPoint[0], lightPoint[1], lightposition[2])
         
-        glUniform1ui(glGetUniformLocation(phongTexPipeline.shaderProgram, "shininess"), 100)
+        glUniform1ui(glGetUniformLocation(phongTexPipeline.shaderProgram, "shininess"), int(100/torch))
         
         glUniform1f(glGetUniformLocation(phongTexPipeline.shaderProgram, "constantAttenuation"), 0.01)
         glUniform1f(glGetUniformLocation(phongTexPipeline.shaderProgram, "linearAttenuation"), 0.03)
@@ -340,8 +402,8 @@ if __name__ == "__main__":
         #sg.drawSceneGraphNode(tex_sphere, phongTexPipeline, "model")
         sg.drawSceneGraphNode(caveScene, phongTexPipeline, "model")
 
-        glUseProgram(tex_pipeline.shaderProgram)
-        sg.drawSceneGraphNode(playerNode, tex_pipeline, "transform")
+        # glUseProgram(tex_pipeline.shaderProgram)
+        sg.drawSceneGraphNode(playerNode, phongTexPipeline, "model")
         
         
         # Once the drawing is rendered, buffers are swap so an uncomplete drawing is never seen.

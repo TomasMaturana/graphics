@@ -25,71 +25,19 @@ def createTextureGPUShape(shape, pipeline, path, glMode=GL_CLAMP_TO_EDGE):
         path, glMode, glMode, GL_LINEAR, GL_LINEAR)
     return gpuShape
 
-def createScene(pipeline):
 
-    gpuRedCube = createGPUShape(pipeline, bs.createColorNormalsCube(1, 0, 0))
-    gpuGreenCube = createGPUShape(pipeline, bs.createColorNormalsCube(0, 1, 0))
-    gpuGrayCube = createGPUShape(pipeline, bs.createColorNormalsCube(0.7, 0.7, 0.7))
-    gpuWhiteCube = createGPUShape(pipeline, bs.createColorNormalsCube(1, 1, 1))
+def createPlayerCube(pipeline, image_path):
+    gpuPlayerCube = createTextureGPUShape(bs.createTextureNormalsCubeX(image_path, 0, 1/7), pipeline, image_path)
 
-    redCubeNode = sg.SceneGraphNode("redCube")
-    redCubeNode.childs = [gpuRedCube]
-
-    greenCubeNode = sg.SceneGraphNode("greenCube")
-    greenCubeNode.childs = [gpuGreenCube]
-
-    grayCubeNode = sg.SceneGraphNode("grayCube")
-    grayCubeNode.childs = [gpuGrayCube]
-
-    whiteCubeNode = sg.SceneGraphNode("whiteCube")
-    whiteCubeNode.childs = [gpuWhiteCube]
-
-    rightWallNode = sg.SceneGraphNode("rightWall")
-    rightWallNode.transform = tr.translate(1, 0, 0)
-    rightWallNode.childs = [redCubeNode]
-
-    leftWallNode = sg.SceneGraphNode("leftWall")
-    leftWallNode.transform = tr.translate(-1, 0, 0)
-    leftWallNode.childs = [greenCubeNode]
-
-    backWallNode = sg.SceneGraphNode("backWall")
-    backWallNode.transform = tr.translate(0,-1, 0)
-    backWallNode.childs = [grayCubeNode]
-
-    lightNode = sg.SceneGraphNode("lightSource")
-    lightNode.transform = tr.matmul([tr.translate(0, 0, -0.4), tr.scale(0.12, 0.12, 0.12)])
-    lightNode.childs = [grayCubeNode]
-
-    ceilNode = sg.SceneGraphNode("ceil")
-    ceilNode.transform = tr.translate(0, 0, 1)
-    ceilNode.childs = [grayCubeNode, lightNode]
-
-    floorNode = sg.SceneGraphNode("floor")
-    floorNode.transform = tr.translate(0, 0, -1)
-    floorNode.childs = [grayCubeNode]
-
-    sceneNode = sg.SceneGraphNode("scene")
-    sceneNode.transform = tr.matmul([tr.translate(0, 0, 0), tr.scale(5, 5, 5)])
-    sceneNode.childs = [rightWallNode, leftWallNode, backWallNode, ceilNode, floorNode]
-
-    trSceneNode = sg.SceneGraphNode("tr_scene")
-    trSceneNode.childs = [sceneNode]
-
-    return trSceneNode
-
-def createCube1(pipeline):
-    gpuGrayCube = createGPUShape(pipeline, bs.createColorNormalsCube(0.5, 0.5, 0.5))
-
-    grayCubeNode = sg.SceneGraphNode("grayCube")
-    grayCubeNode.childs = [gpuGrayCube]
+    playerCubeNode = sg.SceneGraphNode("playerCube")
+    playerCubeNode.childs = [gpuPlayerCube]
 
     objectNode = sg.SceneGraphNode("object1")
     objectNode.transform = tr.matmul([
-        tr.translate(0.25,-0.15,-0.25),
-        tr.rotationZ(np.pi*0.15),
-        tr.scale(0.2,0.2,0.5)
+        tr.translate(0.0, 0.0, 0.0),
+        tr.scale(0.2,0.2,0.4)
     ])
-    objectNode.childs = [grayCubeNode]
+    objectNode.childs = [playerCubeNode]
 
     scaledObject = sg.SceneGraphNode("object1")
     scaledObject.transform = tr.scale(5, 5, 5)
@@ -289,10 +237,10 @@ def createTextureMesh(npyZMesh, npyTexIndex, N):
             ifV2= (texMesh.texcoord2D(vertexs[v2])[0] != None) and (texMesh.texcoord2D(vertexs[v2])[1] != None)
             ifV3= (texMesh.texcoord2D(vertexs[v3])[0] != None) and (texMesh.texcoord2D(vertexs[v3])[1] != None)
             if ifV0 and ifV1 and ifV2 and ifV3:
-                texMesh.set_texcoord2D(vertexs[v0], [texNum*npyTexIndex[i,j], 0.0])
-                texMesh.set_texcoord2D(vertexs[v1], [texNum*npyTexIndex[i,j]+texNum, 0.0])
-                texMesh.set_texcoord2D(vertexs[v2], [texNum*npyTexIndex[i,j]+texNum, 1.1])
-                texMesh.set_texcoord2D(vertexs[v3], [texNum*npyTexIndex[i,j], 1.1])
+                texMesh.set_texcoord2D(vertexs[v3], [texNum*npyTexIndex[i,j], 0.0])
+                texMesh.set_texcoord2D(vertexs[v2], [texNum*npyTexIndex[i,j]+texNum, 0.0])
+                texMesh.set_texcoord2D(vertexs[v1], [texNum*npyTexIndex[i,j]+texNum, 1.1])
+                texMesh.set_texcoord2D(vertexs[v0], [texNum*npyTexIndex[i,j], 1.1])
 
     return texMesh
 
@@ -434,27 +382,10 @@ def z_in_pos(mesh, x, y, N=100):
         v = vertexs[i]
         z = mesh.point(v)[2]
         print([x,y,z])
-        return z+1
+        return z
     else:
         return False
 
-    # mesh_faces = mesh.faces()
-
-    # for face in mesh_faces:
-    #     # Obtenemos los vertices de la cara
-    #     face_vertexes = list(mesh.fv(face))
-
-    #     # Obtenemos las posiciones de los 3 vertices
-    #     first_vertex = mesh.point(face_vertexes[0]).tolist()
-    #     second_vertex = mesh.point(face_vertexes[1]).tolist()
-    #     third_vertex = mesh.point(face_vertexes[2]).tolist()
-
-    #     # Revisamos si alguno de los vertices esta en el rango buscado, devolvemos face si esta dentro del rango
-    #     if (first_vertex[0] <= x <= second_vertex[0]) or (first_vertex[0] <= second_vertex[axis] <= first_vertex[0]) or (
-    #             first_vertex[0] <= third_vertex[axis] <= first_vertex[0]):
-    #             return face
-    
-    # return False
 
 def createNPYTextureShape(npyMesh, N):
     #mesh = createTextureMesh(npyMesh, N)
