@@ -317,6 +317,7 @@ if __name__ == "__main__":
         fullScene.childs.append(puzzleNode)
 
     fullScene.childs.append(playerNode)
+    step=False
 
     # Application loop
     while not glfw.window_should_close(window):
@@ -346,7 +347,10 @@ if __name__ == "__main__":
         ])
         if controller.rightClickOn or controller.leftClickOn or controller.is_up_pressed or controller.is_down_pressed:
             stepsCounter +=1
-        player.update(playerNodeTransform, stepsCounter)
+            if stepsCounter%2==1:
+                step=True
+        player.update(playerNodeTransform, step)
+        step=False
 
         # Setting up the projection transform
         projection = tr.perspective(90, float(width) / float(height), 0.1, 100)

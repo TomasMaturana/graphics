@@ -27,8 +27,8 @@ class Player():
         # Se obtiene la referncia al controller
         self.controller = new_controller
 
-    def update(self, playerTransform, stepsCounter):
-        if stepsCounter%10 ==1:
+    def update(self, playerTransform, step):
+        if step:
             self.actual_sprite= (self.actual_sprite + 1)%6
         self.model.childs= [self.sprite[self.actual_sprite]]
         self.model.transform = playerTransform
