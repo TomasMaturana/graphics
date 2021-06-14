@@ -26,8 +26,8 @@ def createTextureGPUShape(shape, pipeline, path, glMode=GL_CLAMP_TO_EDGE):
     return gpuShape
 
 
-def createPlayerCube(pipeline, image_path, x0, x1):
-    gpuPlayerCube = createTextureGPUShape(bs.createTextureNormalsCubeX(image_path, x0, x1), pipeline, image_path)
+def createPlayerCube(pipeline, image_path, x0, x1, up=0.3):
+    gpuPlayerCube = createTextureGPUShape(bs.createTextureNormalsCubeX(image_path, x0, x1, up=up), pipeline, image_path)
 
     playerCubeNode = sg.SceneGraphNode("playerCube")
     playerCubeNode.childs = [gpuPlayerCube]
@@ -35,7 +35,7 @@ def createPlayerCube(pipeline, image_path, x0, x1):
     objectNode = sg.SceneGraphNode("object1")
     objectNode.transform = tr.matmul([
         tr.translate(0.0, 0.0, 0.0),
-        tr.scale(0.2,0.2,0.4)
+        tr.scale(0.2,0.2,0.2)
     ])
     objectNode.childs = [playerCubeNode]
 

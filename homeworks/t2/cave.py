@@ -9,7 +9,6 @@ import grafica.performance_monitor as pm
 import grafica.lighting_shaders as ls
 import grafica.scene_graph as sg
 from shapes3d import *
-from shapes import *
 from model import *
 import grafica.newLightShaders as nl
 import sys
@@ -33,7 +32,7 @@ class Camera:
 
         # if sky - ground < lara height
         newSkyZ=z_in_pos(skyMesh, int(newEye[0]), int(newEye[1]))
-        if (newSkyZ-newEye[2])<2:
+        if (newSkyZ-newEye[2])<1:
            return False
 
         # if next z >> actual z
@@ -59,8 +58,8 @@ class Camera:
 
 
     def update_view(self):
-        at_x = self.eye[0] + np.cos(self.theta)
-        at_y = self.eye[1] + np.sin(self.theta)
+        at_x = self.eye[0] + 0.8*np.cos(self.theta)
+        at_y = self.eye[1] + 0.8*np.sin(self.theta)
         self.at = np.array([at_x, at_y, self.eye[2]])
 
         viewMatrix = tr.lookAt(
@@ -135,7 +134,7 @@ class Controller:
 
         elif key == glfw.KEY_1:
             if action == glfw.PRESS:
-                self.torch_lvl = 4
+                self.torch_lvl = 3.5
 
         elif key == glfw.KEY_2:
             if action == glfw.PRESS:
@@ -147,7 +146,7 @@ class Controller:
 
         elif key == glfw.KEY_0:
             if action == glfw.PRESS:
-                self.torch_lvl = 15
+                self.torch_lvl = 150
 
         elif key == glfw.KEY_D:
             if action == glfw.PRESS:
@@ -166,9 +165,7 @@ class Controller:
                 self.torchPosY -= 2
 
 
-        
-
-
+    
     #Funcion que recibe el input para manejar la camara
     def update_camera(self, delta, mesh, skyMesh, doit=False):
         
@@ -278,7 +275,7 @@ if __name__ == "__main__":
     player.set_model(playerNode, playerNodes)
     player.set_controller(controller)
 
-    caveScene, groundMesh, skyMesh = createTexNodes(phongTexPipeline, map, N, texture_path)
+    caveScene, groundMesh, skyMesh = createTexNodes(phongTexPipeline, map, 100, texture_path)
     
 
     perfMonitor = pm.PerformanceMonitor(glfw.get_time(), 0.5)
@@ -291,11 +288,35 @@ if __name__ == "__main__":
     print(sys.argv[1])
     camera=controller.get_camera()
     if sys.argv[1] == "map2.npy":
-        controller.camera.set_eye_at_simple([10, -40, 7], [10, -40, 7])
-    elif sys.argv[1] == "map1.npy":
-        controller.camera.set_eye_at_simple([0, 0, 7], [0, 0, 7])
+        controller.camera.set_eye_at_simple([10.5, -40.5, 7], [10, -40, 7])
+    if sys.argv[1] == "map1.npy":
+        controller.camera.set_eye_at_simple([0.5, 0.5, 7], [0, 0, 7])
 
     stepsCounter=0
+
+    
+    fullScene = sg.SceneGraphNode("fullScene")
+    fullScene.childs=[caveScene]
+
+    puzzles=[]
+    for n in range(N):
+        xP=np.random.randint(-45, 45)
+        yP=np.random.randint(-45, 45)
+        zP=z_in_pos(groundMesh, xP, yP)+0.2
+        zSky=z_in_pos(skyMesh, xP, yP)+0.2
+        while (zSky-zP)<1.1:
+            xP=np.random.randint(-45, 45)
+            yP=np.random.randint(-45, 45)
+            zP=z_in_pos(groundMesh, xP, yP)+0.2
+            zSky=z_in_pos(skyMesh, xP, yP)+0.2
+        puzzle= Puzzle(xP, yP, zP, 2)
+        puzzleNode=createPlayerCube(phongTexPipeline, "img/choco.png", 0, 1, up=1.0)
+        puzzle.set_model(puzzleNode)
+        puzzle.set_controller(controller)
+        puzzles.append(puzzle)
+        fullScene.childs.append(puzzleNode)
+
+    fullScene.childs.append(playerNode)
 
     # Application loop
     while not glfw.window_should_close(window):
@@ -312,12 +333,16 @@ if __name__ == "__main__":
 
         controller.update_camera(delta, groundMesh, skyMesh)
         camera = controller.get_camera()
+        laraZ=camera.at[2]
 
         viewMatrix = camera.update_view()
 
+        for p in puzzles:
+            p.update(t1)
+
         playerNodeTransform = tr.matmul([
-            tr.translate(camera.at[0], camera.at[1], camera.eye[2]),
-            tr.scale(0.2,0.2,0.2)
+            tr.translate(camera.at[0], camera.at[1], laraZ-0.35), 
+            tr.scale(0.1,0.1,0.2)
         ])
         if controller.rightClickOn or controller.leftClickOn or controller.is_up_pressed or controller.is_down_pressed:
             stepsCounter +=1
@@ -336,7 +361,7 @@ if __name__ == "__main__":
             glPolygonMode(GL_FRONT_AND_BACK, GL_LINE)
 
         
-        lightposition = np.array([camera.at[0], camera.at[1], camera.at[2]])
+        lightposition = np.array([camera.at[0]+ 0.8*np.cos(camera.theta), camera.at[1]+ 0.8*np.sin(camera.theta), camera.at[2]])#np.array([camera.at[0], camera.at[1], camera.at[2]])
         lightPoint1 = lightposition + 1*(lightposition - camera.eye)
         lightPoint = np.array([lightPoint1[0]+controller.torchPosX, lightPoint1[1]+controller.torchPosY, lightPoint1[2]])
 
@@ -344,12 +369,12 @@ if __name__ == "__main__":
         glUseProgram(phongTexPipeline.shaderProgram)
         torch=controller.torch_lvl
 
-        glUniform3f(glGetUniformLocation(phongTexPipeline.shaderProgram, "La"), 0.2/torch, 0.2/torch, 0.2/torch)
-        glUniform3f(glGetUniformLocation(phongTexPipeline.shaderProgram, "Ld"), 0.5, 0.5, 0.5)
+        glUniform3f(glGetUniformLocation(phongTexPipeline.shaderProgram, "La"), 0.8/torch, 0.8/torch, 0.8/torch)
+        glUniform3f(glGetUniformLocation(phongTexPipeline.shaderProgram, "Ld"), 0.5/torch, 0.5/torch, 0.5/torch)
         glUniform3f(glGetUniformLocation(phongTexPipeline.shaderProgram, "Ls"), 1.0, 1.0, 1.0)
 
         glUniform3f(glGetUniformLocation(phongTexPipeline.shaderProgram, "Ka"), 1.0/torch, 1.0/torch, 1.0/torch)
-        glUniform3f(glGetUniformLocation(phongTexPipeline.shaderProgram, "Kd"), 1.0, 1.0, 1.0)
+        glUniform3f(glGetUniformLocation(phongTexPipeline.shaderProgram, "Kd"), 1.0/torch, 1.0/torch, 1.0/torch)
         glUniform3f(glGetUniformLocation(phongTexPipeline.shaderProgram, "Ks"), 1.0, 1.0, 1.0)
 
         glUniform3f(glGetUniformLocation(phongTexPipeline.shaderProgram, "lightPosition"), lightposition[0], lightposition[1], lightposition[2])
@@ -366,10 +391,7 @@ if __name__ == "__main__":
         glUniformMatrix4fv(glGetUniformLocation(phongTexPipeline.shaderProgram, "model"), 1, GL_TRUE, tr.identity())
 
         #sg.drawSceneGraphNode(tex_sphere, phongTexPipeline, "model")
-        sg.drawSceneGraphNode(caveScene, phongTexPipeline, "model")
-
-        # glUseProgram(tex_pipeline.shaderProgram)
-        sg.drawSceneGraphNode(playerNode, phongTexPipeline, "model")
+        sg.drawSceneGraphNode(fullScene, phongTexPipeline, "model")
         
         
         # Once the drawing is rendered, buffers are swap so an uncomplete drawing is never seen.

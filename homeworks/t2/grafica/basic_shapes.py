@@ -16,19 +16,19 @@ class Shape:
 
 
 
-def createTextureNormalsCubeX(image_filename, x0, x1):
+def createTextureNormalsCubeX(image_filename, x0, x1, up):
 
     # Defining locations,texture coordinates and normals for each vertex of the shape  
     vertices = [
     #   positions            tex coords   normals
     # Z+
-        -0.5, -0.5,  0.5,    x0, 0.3,      0,0,1,
-         0.5, -0.5,  0.5,    x1, 0.3,      0,0,1,
+        -0.5, -0.5,  0.5,    x0, up,      0,0,1,
+         0.5, -0.5,  0.5,    x1, up,      0,0,1,
          0.5,  0.5,  0.5,    x1, 0,        0,0,1,
         -0.5,  0.5,  0.5,    x0, 0,        0,0,1,   
     # Z-          
-        -0.5, -0.5, -0.5,    x0, 0.3,      0,0,-1,
-         0.5, -0.5, -0.5,    x1, 0.3,      0,0,-1,
+        -0.5, -0.5, -0.5,    x0, up,      0,0,-1,
+         0.5, -0.5, -0.5,    x1, up,      0,0,-1,
          0.5,  0.5, -0.5,    x1, 0,        0,0,-1,
         -0.5,  0.5, -0.5,    x0, 0,        0,0,-1,
        

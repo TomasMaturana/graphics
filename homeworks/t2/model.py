@@ -52,8 +52,8 @@ class Player():
 
 class Puzzle():
     # class to contain the variables of an Puzzle object (checkpoint to win)
-    def __init__(self, posx, posy, size):
-        self.pos = [posx, posy]
+    def __init__(self, posx, posy, posz, size):
+        self.pos = [posx, posy, posz]
         self.radio = 0.05
         self.model = None # scene graph asociated reference
         self.size = size # scale to apply to the node
@@ -65,14 +65,14 @@ class Puzzle():
     def set_controller(self, new_controller):
         self.controller = new_controller
 
-    def collision(self, someonesList):
-        # to detect collisions with players
+    # def collision(self, someonesList):
+    #     # to detect collisions with players
 
-        for someone in someonesList:
-            # if the distance to someone is minor than their radios summatory, then collision
-            if ((self.radio+someone.radio)**2 > ((self.pos[0]- someone.pos[0])**2 + (self.pos[1]-someone.pos[1])**2)):
-                self.controller.gameover=1
-                return
+    #     for someone in someonesList:
+    #         # if the distance to someone is minor than their radios summatory, then collision
+    #         if ((self.radio+someone.radio)**2 > ((self.pos[0]- someone.pos[0])**2 + (self.pos[1]-someone.pos[1])**2)):
+    #             self.controller.gameover=1
+    #             return
 
     def update(self, delta):
-            self.model.transform = tr.matmul([tr.translate(self.pos[0], self.pos[1], 0), tr.scale(self.size/2, self.size, 1), tr.rotationZ(delta)])
+            self.model.transform = tr.matmul([tr.translate(self.pos[0], self.pos[1], self.pos[2]), tr.scale(self.size/2, self.size, 1), tr.rotationZ(delta)])
