@@ -1,6 +1,3 @@
-""" P1] Se presenta una escena con la esfera generada en shapes3d.py """
-""" Se usa imgui para generar un menu y controlar variables de iluminacion """
-
 import glfw
 from OpenGL.GL import *
 import OpenGL.GL.shaders
@@ -12,130 +9,13 @@ import grafica.performance_monitor as pm
 import grafica.lighting_shaders as ls
 import grafica.scene_graph as sg
 from shapes3d import *
+from model import *
 
 import imgui
 from imgui.integrations.glfw import GlfwRenderer
 
-# Clase para manejar una camara que se mueve en coordenadas polares
-class PolarCamera:
-    def __init__(self):
-        self.center = np.array([0.0, 0.0, -0.5]) # centro de movimiento de la camara y donde mira la camara
-        self.theta = 0                           # coordenada theta, angulo de la camara
-        self.rho = 5                             # coordenada rho, distancia al centro de la camara
-        self.eye = np.array([0.0, 0.0, 0.0])     # posicion de la camara
-        self.height = 0.5                        # altura fija de la camara
-        self.up = np.array([0, 0, 1])            # vector up
-        self.viewMatrix = None                   # Matriz de vista
-    
-    # Añadir ángulo a la coordenada theta
-    def set_theta(self, delta):
-        self.theta = (self.theta + delta) % (np.pi * 2)
 
-    # Añadir distancia a la coordenada rho, sin dejar que sea menor o igual a 0
-    def set_rho(self, delta):
-        if ((self.rho + delta) > 0.1):
-            self.rho += delta
-    
-    # Actualizar la matriz de vista
-    def update_view(self):
-        # Se calcula la posición de la camara con coordenadas poleras relativas al centro
-        self.eye[0] = self.rho * np.sin(self.theta) + self.center[0]
-        self.eye[1] = self.rho * np.cos(self.theta) + self.center[1]
-        self.eye[2] = self.height + self.center[2]
-
-        # Se genera la matriz de vista
-        viewMatrix = tr.lookAt(
-            self.eye,
-            self.center,
-            self.up
-        )
-        return viewMatrix
-
-# Clase para manejar el controlador y la camara polar
-class Controller:
-    def __init__(self):
-        self.fillPolygon = True
-        self.showAxis = True
-
-        # Variables para controlar la camara
-        self.is_up_pressed = False
-        self.is_down_pressed = False
-        self.is_left_pressed = False
-        self.is_right_pressed = False
-
-        # Se crea instancia de la camara
-        self.polar_camera = PolarCamera()
-
-    # Entregar la referencia a la camara
-    def get_camera(self):
-        return self.polar_camera
-
-    # Metodo para ller el input del teclado
-    def on_key(self, window, key, scancode, action, mods):
-
-        # Caso de detectar la tecla [UP], actualiza estado de variable
-        if key == glfw.KEY_UP:
-            if action == glfw.PRESS:
-                self.is_up_pressed = True
-            elif action == glfw.RELEASE:
-                self.is_up_pressed = False
-
-        # Caso de detectar la tecla [DOWN], actualiza estado de variable
-        if key == glfw.KEY_DOWN:
-            if action == glfw.PRESS:
-                self.is_down_pressed = True
-            elif action == glfw.RELEASE:
-                self.is_down_pressed = False
-
-        # Caso de detectar la tecla [RIGHT], actualiza estado de variable
-        if key == glfw.KEY_RIGHT:
-            if action == glfw.PRESS:
-                self.is_right_pressed = True
-            elif action == glfw.RELEASE:
-                self.is_right_pressed = False
-
-        # Caso de detectar la tecla [LEFT], actualiza estado de variable
-        if key == glfw.KEY_LEFT:
-            if action == glfw.PRESS:
-                self.is_left_pressed = True
-            elif action == glfw.RELEASE:
-                self.is_left_pressed = False
-        
-        # Caso de detectar la barra espaciadora, se cambia el metodo de dibujo
-        if key == glfw.KEY_SPACE:
-            if action == glfw.PRESS:
-                self.fillPolygon = not self.fillPolygon
-
-        # Caso en que se cierra la ventana
-        if key == glfw.KEY_ESCAPE:
-            if action == glfw.PRESS:
-                glfw.set_window_should_close(window, True)
-
-        # Caso de detectar Control izquierdo, se cambia el metodo de dibujo
-        elif key == glfw.KEY_LEFT_CONTROL:
-            if action == glfw.PRESS:
-                self.showAxis = not self.showAxis
-
-
-    #Funcion que recibe el input para manejar la camara y controlar sus coordenadas
-    def update_camera(self, delta):
-        # Camara rota a la izquierda
-        if self.is_left_pressed:
-            self.polar_camera.set_theta(-2 * delta)
-
-        # Camara rota a la derecha
-        if self.is_right_pressed:
-            self.polar_camera.set_theta( 2 * delta)
-        
-        # Camara se acerca al centro
-        if self.is_up_pressed:
-            self.polar_camera.set_rho(-5 * delta)
-
-        # Camara se aleja del centro
-        if self.is_down_pressed:
-            self.polar_camera.set_rho(5 * delta)
-
-def transformGuiOverlay(locationZ, la, ld, ls, cte_at, lnr_at, qud_at, shininess, rot3):
+def transformGuiOverlay(locationZ, la, ld, ls, cte_at, lnr_at, qud_at, shininess, rot3, pos3):
     # Funcion para actualizar el menu
 
     # start new frame context
@@ -153,6 +33,10 @@ def transformGuiOverlay(locationZ, la, ld, ls, cte_at, lnr_at, qud_at, shininess
     edited, rot3[0] = imgui.slider_float("Rot x", rot3[0], 0.0, np.pi*2)
     edited, rot3[1] = imgui.slider_float("Rot Y", rot3[1], 0, np.pi*2)
     edited, rot3[2] = imgui.slider_float("Rot Z", rot3[2], 0, np.pi*2)
+
+    # Rotacion de la esfera
+    edited, pos3[0] = imgui.slider_float("Pos x", pos3[0], -6.55, 6.55)
+    edited, pos3[1] = imgui.slider_float("Pos Y", pos3[1], -3.05, 3.05)
 
     # Coeficiente de iluminacion ambiental
     edited, la = imgui.color_edit3("la", la[0], la[1], la[2])
@@ -185,7 +69,8 @@ def transformGuiOverlay(locationZ, la, ld, ls, cte_at, lnr_at, qud_at, shininess
     imgui.render()
     imgui.end_frame()
 
-    return locationZ, la, ld, ls, cte_at, lnr_at, qud_at, shininess, rot3
+    return locationZ, la, ld, ls, cte_at, lnr_at, qud_at, shininess, rot3, pos3
+
 
 if __name__ == "__main__":
 
@@ -193,7 +78,7 @@ if __name__ == "__main__":
     if not glfw.init():
         glfw.set_window_should_close(window, True)
 
-    width = 800
+    width = 1600
     height = 800
     title = "Tarea 3B: Pool"
 
@@ -223,10 +108,40 @@ if __name__ == "__main__":
     # gpuAxis = createGPUShape(mvpPipeline, bs.createAxis(4))
 
     scene = createScene(phongPipeline)
-    # cube1 = createCube1(phongPipeline)
-    # cube2 = createCube2(phongPipeline)
-    # sphere = createSphereNode(0.3, 0.3, 0.3, phongPipeline)
-    tex_sphere = createTexSphereNode(phongTexPipeline)
+    balls=[]
+    white_ball = Ball(phongTexPipeline, [0,0], [0,0])
+    balls.append(white_ball)
+    ball1 = Ball(phongTexPipeline, [2,0], [0,0], str(1))
+    balls.append(ball1)
+    ball2 = Ball(phongTexPipeline, [2.35,-0.2], [0,0], str(2))
+    balls.append(ball2)
+    ball3 = Ball(phongTexPipeline, [2.35,0.2], [0,0], str(3))
+    balls.append(ball3)
+    ball4 = Ball(phongTexPipeline, [2.7,-0.4], [0,0], str(4))
+    balls.append(ball4)
+    ball5 = Ball(phongTexPipeline, [3.05,-0.2], [0,0], str(5))
+    balls.append(ball5)
+    ball6 = Ball(phongTexPipeline, [2.7,0.4], [0,0], str(6))
+    balls.append(ball6)
+    ball7 = Ball(phongTexPipeline, [3.05,-0.6], [0,0], str(7))
+    balls.append(ball7)
+    ball8 = Ball(phongTexPipeline, [2.7,0], [0,0], str(8))
+    balls.append(ball8)
+    ball9 = Ball(phongTexPipeline, [3.05,0.2], [0,0], str(9))
+    balls.append(ball9)
+    ball10 = Ball(phongTexPipeline, [3.05,0.6], [0,0], str(10))
+    balls.append(ball10)
+    ball11 = Ball(phongTexPipeline, [3.4,-0.8], [0,0], str(11))
+    balls.append(ball11)
+    ball12 = Ball(phongTexPipeline, [3.4,-0.4], [0,0], str(12))
+    balls.append(ball12)
+    ball13 = Ball(phongTexPipeline, [3.4,0], [0,0], str(13))
+    balls.append(ball13)
+    ball14 = Ball(phongTexPipeline, [3.4,0.4], [0,0], str(14))
+    balls.append(ball14)
+    ball15 = Ball(phongTexPipeline, [3.4,0.8], [0,0], str(15))
+    balls.append(ball15)
+
 
     perfMonitor = pm.PerformanceMonitor(glfw.get_time(), 0.5)
     # glfw will swap buffers as soon as possible
@@ -240,10 +155,12 @@ if __name__ == "__main__":
     # IMPORTANTE!! si usa imgui debe conectar los input con on_key despues de inicializar imgui, de lo contrario no funcionan los input 
     # Se instancia un controller
     controller = Controller()
+    actualBall=0
+    controller.set_target_ball(balls[actualBall])
     # Se conecta el metodo on_key del controller para manejar el input del teclado
     glfw.set_key_callback(window, controller.on_key)
 
-    # valores que controlara el menu de imgui
+    # valores que controla el menu de imgui
     locationZ = 2.3 
     la = [1.0, 1.0, 1.0] 
     ld = [1.0, 1.0, 1.0] 
@@ -253,6 +170,7 @@ if __name__ == "__main__":
     qud_at = 0.01
     shininess = 100
     rot = [0.0, 0.0, 0.0] 
+    pos = [0.0, 0.0, -1.8] 
 
     # Application loop
     while not glfw.window_should_close(window):
@@ -266,9 +184,22 @@ if __name__ == "__main__":
         # Using GLFW to check for input events
         glfw.poll_events()
 
+        if controller.is_q_pressed:        
+            actualBall=(actualBall-1)%len(balls)
+            controller.set_target_ball(balls[actualBall], 1)
+            
+        if controller.is_w_pressed:        
+            actualBall=(actualBall+1)%len(balls)
+            controller.set_target_ball(balls[actualBall], 2)
+
+        center_pos = controller.targetBall.position
+        controller.update_center(center_pos)
+
         controller.update_camera(delta)
         camera = controller.get_camera()
         viewMatrix = camera.update_view()
+        eye = camera.eye
+        center = camera.center
 
         # Setting up the projection transform
         projection = tr.perspective(60, float(width) / float(height), 0.1, 100)
@@ -278,8 +209,47 @@ if __name__ == "__main__":
 
          # imgui function
 
-        locationZ, la, ld, ls, cte_at, lnr_at, qud_at, shininess, rot = \
-            transformGuiOverlay(locationZ, la, ld, ls, cte_at, lnr_at, qud_at, shininess, rot)
+        locationZ, la, ld, ls, cte_at, lnr_at, qud_at, shininess, rot, pos = \
+            transformGuiOverlay(locationZ, la, ld, ls, cte_at, lnr_at, qud_at, shininess, rot, pos)
+
+
+##############################################################################
+        if controller.is_z_pressed:
+            controller.update_ball_velocity([center[0]-eye[0], center[1]-eye[1]])
+
+        # Physics!
+        coef=0.2
+        acceleration = np.array([0.0, 0.0], dtype=np.float32)
+        for b in balls:
+            if abs(b.velocity[0])>0.05:
+                if abs(b.velocity[1])>0.05:
+                    acceleration = np.array([-b.velocity[0]*coef, -b.velocity[1]*coef], dtype=np.float32)
+                else:
+                    b.velocity[1]=0.0
+                    acceleration = np.array([-b.velocity[0]*coef, 0.0], dtype=np.float32)
+            else:
+                if abs(b.velocity[1])>0.05:
+                    b.velocity[0]=0.0
+                    acceleration = np.array([0.0, -b.velocity[1]*coef], dtype=np.float32)
+                else:
+                    b.velocity[0]=0.0
+                    b.velocity[1]=0.0
+                    acceleration = np.array([0.0, 0.0], dtype=np.float32)
+
+            b.action(acceleration, delta)
+
+            # checking and processing collisions against the border
+            collideWithBorder(b)
+
+        # checking and processing collisions among balls
+        for i in range(len(balls)):
+            for j in range(i+1, len(balls)):
+                if areColliding(balls[i], balls[j]):
+                    collide(balls[i], balls[j])
+                    print("colliding:" + str(i) + "->" + str(j))
+##############################################################################
+
+
 
         # Filling or not the shapes depending on the controller state
         if (controller.fillPolygon):
@@ -296,7 +266,7 @@ if __name__ == "__main__":
         #     mvpPipeline.drawCall(gpuAxis, GL_LINES)
 
         lightingPipeline = phongPipeline
-        lightposition = [4, 4, locationZ]
+        lightposition = [0, 0, locationZ]
 
         # Setting all uniform shader variables
         
@@ -351,8 +321,13 @@ if __name__ == "__main__":
         glUniformMatrix4fv(glGetUniformLocation(phongTexPipeline.shaderProgram, "projection"), 1, GL_TRUE, projection)
         glUniformMatrix4fv(glGetUniformLocation(phongTexPipeline.shaderProgram, "view"), 1, GL_TRUE, viewMatrix)
 
-        sg.findNode(tex_sphere, "rot").transform = tr.matmul([tr.rotationZ(rot[2]),tr.rotationY(rot[1]),tr.rotationX(rot[0])])
-        sg.drawSceneGraphNode(tex_sphere, phongTexPipeline, "model")
+        # sg.findNode(white_ball.gpuNode, "rot").transform = tr.matmul([tr.rotationZ(rot[2]),tr.rotationY(rot[1]),tr.rotationX(rot[0])])
+        # sg.findNode(white_ball.gpuNode, "sphere").transform = tr.matmul([tr.translate(pos[0], pos[1], pos[2]), tr.scale(0.4,0.4,0.4)])
+        # sg.drawSceneGraphNode(white_ball.gpuNode, phongTexPipeline, "model")
+
+        for b in balls:
+            b.update()
+            sg.drawSceneGraphNode(b.gpuNode, phongTexPipeline, "model")
         
         # Drawing the imgui texture over our drawing
         glPolygonMode(GL_FRONT_AND_BACK, GL_FILL)
@@ -364,9 +339,8 @@ if __name__ == "__main__":
     #gpuAxis.clear()
     impl.shutdown()
     scene.clear()
-    cube1.clear()
-    cube2.clear()
-    # sphere.clear()
-    tex_sphere.clear()
+    #white_ball.clear()
+    for b in balls:
+        b.gpuNode.clear()
 
     glfw.terminate()

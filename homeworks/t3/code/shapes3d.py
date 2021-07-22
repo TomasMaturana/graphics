@@ -378,10 +378,10 @@ def createTexSphereNode(pipeline, num=""):
     # Funcion para crear Grafo de una esfera texturizada de la escena, se separa en otro grafo, por si se quiere dibujar con otro material
     sphere = createTextureGPUShape(createTextureNormalSphere(40), pipeline, "sprites/b" + num + ".png") # Shape de la esfera texturizada
 
-    rotNode = sg.SceneGraphNode("rot"+num)
+    rotNode = sg.SceneGraphNode("rot")
     rotNode.childs = [sphere]
     # Nodo de la esfera trasladado y escalado
-    sphereNode = sg.SceneGraphNode("sphere"+num)
+    sphereNode = sg.SceneGraphNode("sphere")
     sphereNode.transform =tr.matmul([
         tr.translate(-0.0,0.0,-0.0),
         tr.scale(0.4,0.4,0.4)
