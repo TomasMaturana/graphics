@@ -10,6 +10,8 @@ import grafica.lighting_shaders as ls
 import grafica.scene_graph as sg
 from shapes3d import *
 from model import *
+import sys
+import json
 
 import imgui
 from imgui.integrations.glfw import GlfwRenderer
@@ -73,6 +75,10 @@ def transformGuiOverlay(locationZ, la, ld, ls, cte_at, lnr_at, qud_at, shininess
 
 
 if __name__ == "__main__":
+    config = open(sys.argv[1],)
+    data = json.load(config)
+    coef=data["friccion"]
+    restCoef=data["restitucion"]
 
     # Initialize glfw
     if not glfw.init():
@@ -184,6 +190,10 @@ if __name__ == "__main__":
         # Using GLFW to check for input events
         glfw.poll_events()
 
+        if not controller.targetBall.state:
+            actualBall=(actualBall)%len(balls)
+            controller.set_target_ball(balls[actualBall])
+
         if controller.is_q_pressed:        
             actualBall=(actualBall-1)%len(balls)
             controller.set_target_ball(balls[actualBall], 1)
@@ -215,10 +225,9 @@ if __name__ == "__main__":
 
 ##############################################################################
         if controller.is_z_pressed:
-            controller.update_ball_velocity([center[0]-eye[0], center[1]-eye[1]])
+            controller.update_ball_velocity([(center[0]-eye[0])*2, (center[1]-eye[1])*2])
 
-        # Physics!
-        coef=0.2
+        #
         acceleration = np.array([0.0, 0.0], dtype=np.float32)
         for b in balls:
             if abs(b.velocity[0])>0.05:
@@ -240,12 +249,15 @@ if __name__ == "__main__":
 
             # checking and processing collisions against the border
             collideWithBorder(b)
+            if not b.state:
+                b.gpuNode.clear()
+                balls.remove(b)
 
         # checking and processing collisions among balls
         for i in range(len(balls)):
             for j in range(i+1, len(balls)):
                 if areColliding(balls[i], balls[j]):
-                    collide(balls[i], balls[j])
+                    collide(balls[i], balls[j], restCoef)
                     print("colliding:" + str(i) + "->" + str(j))
 ##############################################################################
 
@@ -256,14 +268,6 @@ if __name__ == "__main__":
             glPolygonMode(GL_FRONT_AND_BACK, GL_FILL)
         else:
             glPolygonMode(GL_FRONT_AND_BACK, GL_LINE)
-
-        # # The axis is drawn without lighting effects
-        # if controller.showAxis:
-        #     glUseProgram(mvpPipeline.shaderProgram)
-        #     glUniformMatrix4fv(glGetUniformLocation(mvpPipeline.shaderProgram, "projection"), 1, GL_TRUE, projection)
-        #     glUniformMatrix4fv(glGetUniformLocation(mvpPipeline.shaderProgram, "view"), 1, GL_TRUE, viewMatrix)
-        #     glUniformMatrix4fv(glGetUniformLocation(mvpPipeline.shaderProgram, "model"), 1, GL_TRUE, tr.identity())
-        #     mvpPipeline.drawCall(gpuAxis, GL_LINES)
 
         lightingPipeline = phongPipeline
         lightposition = [0, 0, locationZ]
@@ -294,9 +298,6 @@ if __name__ == "__main__":
 
         # Drawing
         sg.drawSceneGraphNode(scene, lightingPipeline, "model")
-        #sg.drawSceneGraphNode(cube1, lightingPipeline, "model")
-        #sg.drawSceneGraphNode(cube2, lightingPipeline, "model")
-        # sg.drawSceneGraphNode(sphere, lightingPipeline, "model")
         
         # Se cambia al pipeline para dibujar texturas
 

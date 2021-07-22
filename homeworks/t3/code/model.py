@@ -97,28 +97,28 @@ class Controller:
     def on_key(self, window, key, scancode, action, mods):
 
         # Caso de detectar la tecla [UP], actualiza estado de variable
-        if key == glfw.KEY_UP:
+        if key == glfw.KEY_UP and not self.upCam:
             if action == glfw.PRESS:
                 self.is_up_pressed = True
             elif action == glfw.RELEASE:
                 self.is_up_pressed = False
 
         # Caso de detectar la tecla [DOWN], actualiza estado de variable
-        if key == glfw.KEY_DOWN:
+        if key == glfw.KEY_DOWN and not self.upCam:
             if action == glfw.PRESS:
                 self.is_down_pressed = True
             elif action == glfw.RELEASE:
                 self.is_down_pressed = False
 
         # Caso de detectar la tecla [RIGHT], actualiza estado de variable
-        if key == glfw.KEY_RIGHT:
+        if key == glfw.KEY_RIGHT and not self.upCam:
             if action == glfw.PRESS:
                 self.is_right_pressed = True
             elif action == glfw.RELEASE:
                 self.is_right_pressed = False
 
         # Caso de detectar la tecla [LEFT], actualiza estado de variable
-        if key == glfw.KEY_LEFT:
+        if key == glfw.KEY_LEFT and not self.upCam:
             if action == glfw.PRESS:
                 self.is_left_pressed = True
             elif action == glfw.RELEASE:
@@ -140,7 +140,7 @@ class Controller:
                 self.is_w_pressed = True
             
         # Caso de detectar la tecla z, se ejecuta el golpe a la bola
-        if key == glfw.KEY_Z:
+        if key == glfw.KEY_Z and not self.upCam:
             if action == glfw.PRESS:
                 self.is_z_pressed = True
         
@@ -177,10 +177,13 @@ class Controller:
                 self.polar_camera.set_height(0.5)
                 self.upCam = False
                 self.is_1_pressed = False
+                self.polar_camera.rho=5
             else:
                 self.polar_camera.set_height(6)
                 self.upCam = True
                 self.is_1_pressed = False
+                self.polar_camera.rho=0.1
+                self.polar_camera.theta=0
                 #bloquear movimiento cámara + setear camara 
 
     def update_center(self, pos):
@@ -212,6 +215,7 @@ class Ball:
         self.position = position
         self.radius = RADIUS
         self.velocity = velocity
+        self.state = True
 
     def action(self, aceleration, deltaTime):
         # Euler integration
@@ -220,6 +224,9 @@ class Ball:
 
     def update(self, zPos=-1.8):
         sg.findNode(self.gpuNode, "sphere").transform = tr.matmul([tr.translate(self.position[0], self.position[1], zPos), tr.scale(0.4,0.4,0.4)])
+
+    def delete(self):
+        self.state=False
 
     # def draw(self):
     #     glUniformMatrix4fv(glGetUniformLocation(self.pipeline.shaderProgram, "transform"), 1, GL_TRUE,
@@ -241,7 +248,7 @@ def rotate2D(vector, theta):
     ], dtype = np.float32)
 
 
-def collide(ball1, ball2):
+def collide(ball1, ball2, restCoef=1):
     """
     If there are a collision between the balls, it modifies the velocity of
     both balls in a way that preserves energy and momentum.
@@ -271,8 +278,8 @@ def collide(ball1, ball2):
 
         # swaping the normal components...
         # this means that we applying energy and momentum conservation
-        ball1.velocity = v2n + v1t
-        ball2.velocity = v1n + v2t
+        ball1.velocity = restCoef*(v2n + v1t)
+        ball2.velocity = restCoef*(v1n + v2t)
 
 
 def areColliding(ball1, ball2):
@@ -286,21 +293,30 @@ def areColliding(ball1, ball2):
 
 
 def collideWithBorder(ball):
+    if abs(ball.position[0]) < 0.15 and abs(ball.position[1]) >= 3.1:
+        if abs(ball.position[1]) >= 3.25:
+            ball.delete()
+        return True
+
+    if 6.5 <= abs(ball.position[0])  and abs(ball.position[1]) >= 3:
+        if abs(ball.position[1]) >= 3.2:
+            ball.delete()
+        return True
 
     # Right
-    if ball.position[0] + ball.radius > 6.75:
+    if ball.position[0] + ball.radius > 6.76:
         ball.velocity[0] = -abs(ball.velocity[0])
 
     # Left
-    if ball.position[0] < -6.75 + ball.radius:
+    if ball.position[0] < -6.76 + ball.radius:
         ball.velocity[0] = abs(ball.velocity[0])
 
     # Top
-    if ball.position[1] > 3.25 - ball.radius:
+    if ball.position[1] > 3.3 - ball.radius:
         ball.velocity[1] = -abs(ball.velocity[1])
 
     # Bottom
-    if ball.position[1] < -3.25 + ball.radius:
+    if ball.position[1] < -3.3 + ball.radius:
         ball.velocity[1] = abs(ball.velocity[1])
 
 
