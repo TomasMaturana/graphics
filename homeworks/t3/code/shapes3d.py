@@ -31,8 +31,8 @@ def createScene(pipeline):
     gpuRedCube = createGPUShape(pipeline, bs.createColorNormalsCube(1, 0, 0)) # Shape del cubo rojo
     gpuGreenCube = createGPUShape(pipeline, bs.createColorNormalsCube(0, 1, 0)) # Shape del cubo verde
     gpuGrayCube = createGPUShape(pipeline, bs.createColorNormalsCube(0.7, 0.7, 0.7)) # Shape del cubo gris
-    # gpuWhiteCube = createGPUShape(pipeline, bs.createColorNormalsCube(1, 1, 1)) # Shape del cubo blanco
     gpuBrownCube = createGPUShape(pipeline, bs.createColorNormalsCube(0.6, 0.2, 0.2)) # Shape del cubo café
+    gpuBlackCircle = createGPUShape(pipeline, bs.createRGBCircle(50, 0.0, 0.0, 0.0)) 
 
     # Nodo del cubo rojo
     redCubeNode = sg.SceneGraphNode("redCube")
@@ -46,9 +46,9 @@ def createScene(pipeline):
     grayCubeNode = sg.SceneGraphNode("grayCube")
     grayCubeNode.childs = [gpuGrayCube]
 
-    # # Nodo del cubo blanco
-    # whiteCubeNode = sg.SceneGraphNode("whiteCube")
-    # whiteCubeNode.childs = [gpuWhiteCube]
+    # Nodo del círculo negro
+    blackCircleNode = sg.SceneGraphNode("blackCircle")
+    blackCircleNode.childs = [gpuBlackCircle]
 
     # Nodo del cubo café
     brownCubeNode = sg.SceneGraphNode("brownCube")
@@ -89,10 +89,40 @@ def createScene(pipeline):
     floorNode.transform = tr.matmul([tr.translate(0, 0, -2), tr.scale(3, 3, 3)])
     floorNode.childs = [brownCubeNode]
 
+    # Nodo de hoyo 1
+    holeNode1 = sg.SceneGraphNode("hole1")
+    holeNode1.transform = tr.matmul([tr.translate(0.445, 0.44, 0.51), tr.scale(0.04, 0.08, 1)])
+    holeNode1.childs = [blackCircleNode]
+
+    # Nodo de hoyo 2
+    holeNode2 = sg.SceneGraphNode("hole2")
+    holeNode2.transform = tr.matmul([tr.translate(0, 0.45, 0.51), tr.scale(0.04, 0.08, 1)])
+    holeNode2.childs = [blackCircleNode]
+
+    # Nodo de hoyo 3
+    holeNode3 = sg.SceneGraphNode("hole3")
+    holeNode3.transform = tr.matmul([tr.translate(0, -0.45, 0.51), tr.scale(0.04, 0.08, 1)])
+    holeNode3.childs = [blackCircleNode]
+
+    # Nodo de hoyo 4
+    holeNode4 = sg.SceneGraphNode("hole4")
+    holeNode4.transform = tr.matmul([tr.translate(0.445, -0.44, 0.51), tr.scale(0.04, 0.08, 1)])
+    holeNode4.childs = [blackCircleNode]
+
+    # Nodo de hoyo 5
+    holeNode5 = sg.SceneGraphNode("hole5")
+    holeNode5.transform = tr.matmul([tr.translate(-0.445, 0.44, 0.51), tr.scale(0.04, 0.08, 1)])
+    holeNode5.childs = [blackCircleNode]
+
+    # Nodo de hoyo 6
+    holeNode6 = sg.SceneGraphNode("hole6")
+    holeNode6.transform = tr.matmul([tr.translate(-0.445, -0.44, 0.51), tr.scale(0.04, 0.08, 1)])
+    holeNode6.childs = [blackCircleNode]
+
     # Nodo de la superficie de pool verde
     fieldNode = sg.SceneGraphNode("field")
     fieldNode.transform = tr.matmul([tr.translate(0, 0, -0.25), tr.scale(1.5, 0.75, 0.1)])
-    fieldNode.childs = [greenCubeNode]
+    fieldNode.childs = [greenCubeNode, holeNode1, holeNode2, holeNode3, holeNode4, holeNode5, holeNode6]
 
     # Nodo de amortiguador1
     am1Node = sg.SceneGraphNode("am1")

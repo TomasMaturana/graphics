@@ -184,13 +184,9 @@ class Controller:
                 self.is_1_pressed = False
                 self.polar_camera.rho=0.1
                 self.polar_camera.theta=0
-                #bloquear movimiento cámara + setear camara 
 
     def update_center(self, pos):
-        # xDif=self.polar_camera.center[0]-pos[0]
-        # yDif=self.polar_camera.center[1]-pos[1]
         self.polar_camera.set_center(pos[0], pos[1], self.polar_camera.center[2])
-        #self.polar_camera.set_eye(self.polar_camera.eye[0] - xDif, self.polar_camera.eye[1] - yDif, self.polar_camera.eye[2])
 
     #Golpe a bola
     def update_ball_velocity(self, vel):
@@ -216,6 +212,8 @@ class Ball:
         self.radius = RADIUS
         self.velocity = velocity
         self.state = True
+        self.thetaX = np.pi
+        self.thetaY = np.pi
 
     def action(self, aceleration, deltaTime):
         # Euler integration
@@ -223,16 +221,12 @@ class Ball:
         self.position += self.velocity * deltaTime
 
     def update(self, zPos=-1.8):
-        sg.findNode(self.gpuNode, "sphere").transform = tr.matmul([tr.translate(self.position[0], self.position[1], zPos), tr.scale(0.4,0.4,0.4)])
+        self.thetaX = (self.thetaX - self.velocity[1]*0.02) % (2*np.pi)
+        self.thetaY = (self.thetaY - self.velocity[0]*0.02) % (2*np.pi)
+        sg.findNode(self.gpuNode, "sphere").transform = tr.matmul([tr.translate(self.position[0], self.position[1], zPos), tr.scale(0.4,0.4,0.4), tr.rotationX(self.thetaX), tr.rotationY(self.thetaY)])
 
     def delete(self):
         self.state=False
-
-    # def draw(self):
-    #     glUniformMatrix4fv(glGetUniformLocation(self.pipeline.shaderProgram, "transform"), 1, GL_TRUE,
-    #         tr.translate(self.position[0], self.position[1], 0.0)
-    #     )
-    #     self.pipeline.drawCall(self.gpuNode)
     
 
 def rotate2D(vector, theta):
