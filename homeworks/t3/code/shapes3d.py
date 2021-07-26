@@ -24,6 +24,42 @@ def createTextureGPUShape(shape, pipeline, path):
         path, GL_CLAMP_TO_EDGE, GL_CLAMP_TO_EDGE, GL_NEAREST, GL_NEAREST)
     return gpuShape
 
+def createTaco(pipeline):
+    quad = createTextureGPUShape(bs.createTextureQuad(1 ,1), pipeline, "sprites/wood.jpg")
+    quadNode = sg.SceneGraphNode("quad")
+    quadNode.transform =tr.matmul([
+        tr.translate(0.005,-0.9,0.0),
+        tr.scale(0.02,0.8,0.4),
+        tr.shearing(-0.5, 0, 0, 0, 0, 0)
+    ])
+    quadNode.childs = [quad]
+
+    quadNode2 = sg.SceneGraphNode("quad")
+    quadNode2.transform =tr.matmul([
+        tr.translate(-0.005,-0.9,0.0),
+        tr.scale(0.02,0.8,0.4),
+        tr.shearing(0.5, 0, 0, 0, 0, 0)
+    ])
+    quadNode2.childs = [quad]
+
+    # Nodo del objeto escalado con el mismo valor de la escena base
+    scaledQuad = sg.SceneGraphNode("sc_quad")
+    scaledQuad.childs = [quadNode, quadNode2]
+
+    return scaledQuad
+
+def createShadowNode(pipeline):
+    # Funcion para crear Grafo de una esfera texturizada de la escena, se separa en otro grafo, por si se quiere dibujar con otro material
+    gpuBlackCircle = createGPUShape(pipeline, bs.createRGBCircle(50, 0.5, 0.5, 0.5)) 
+
+    blackCircleNode = sg.SceneGraphNode("blackCircle")
+    blackCircleNode.childs = [gpuBlackCircle]
+
+    shadowNode = sg.SceneGraphNode("shadow")
+    shadowNode.childs = [blackCircleNode]
+
+    return shadowNode
+
 def createScene(pipeline):
     # Se crea la escena base
 

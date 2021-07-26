@@ -85,6 +85,7 @@ class Controller:
         self.is_1_pressed = False
         self.upCam = False
         self.targetBall = None
+        self.mooving = False
 
         # Se crea instancia de la camara
         self.polar_camera = PolarCamera()
@@ -140,7 +141,7 @@ class Controller:
                 self.is_w_pressed = True
             
         # Caso de detectar la tecla z, se ejecuta el golpe a la bola
-        if key == glfw.KEY_Z and not self.upCam:
+        if key == glfw.KEY_Z and not self.upCam and not self.mooving:
             if action == glfw.PRESS:
                 self.is_z_pressed = True
         
@@ -190,9 +191,10 @@ class Controller:
 
     #Golpe a bola
     def update_ball_velocity(self, vel):
-        if self.is_z_pressed:
+        if self.is_z_pressed and not self.mooving:
             self.targetBall.velocity=vel
             self.is_z_pressed = False
+            self.mooving = True
 
     # target ball setter
     def set_target_ball(self, ball, qOrW=0):
@@ -205,9 +207,10 @@ class Controller:
 
 
 class Ball:
-    def __init__(self, pipeline, position, velocity, num=""):
+    def __init__(self, pipeline, pipeline2, position, velocity, num=""):
         self.pipeline = pipeline
         self.gpuNode = createTexSphereNode(pipeline, num)
+        self.shadow = createShadowNode(pipeline2)
         self.position = position
         self.radius = RADIUS
         self.velocity = velocity
@@ -224,6 +227,7 @@ class Ball:
         self.thetaX = (self.thetaX - self.velocity[1]*0.02) % (2*np.pi)
         self.thetaY = (self.thetaY - self.velocity[0]*0.02) % (2*np.pi)
         sg.findNode(self.gpuNode, "sphere").transform = tr.matmul([tr.translate(self.position[0], self.position[1], zPos), tr.scale(0.4,0.4,0.4), tr.rotationX(self.thetaX), tr.rotationY(self.thetaY)])
+        self.shadow.transform = tr.matmul([tr.translate(self.position[0], self.position[1], zPos-self.radius), tr.scale(0.4,0.4,1)])
 
     def delete(self):
         self.state=False

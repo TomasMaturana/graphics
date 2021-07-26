@@ -13,66 +13,6 @@ from model import *
 import sys
 import json
 
-import imgui
-from imgui.integrations.glfw import GlfwRenderer
-
-
-def transformGuiOverlay(locationZ, la, ld, ls, cte_at, lnr_at, qud_at, shininess, rot3, pos3):
-    # Funcion para actualizar el menu
-
-    # start new frame context
-    imgui.new_frame()
-
-    # open new window context
-    imgui.begin("Light control", False, imgui.WINDOW_ALWAYS_AUTO_RESIZE)
-
-    # draw text label inside of current window
-    imgui.text("Configuration sliders")
-
-    # Posicion z de la fuente de luz
-    edited, locationZ = imgui.slider_float("location Z", locationZ, -1.0, 2.3)
-    # Rotacion de la esfera
-    edited, rot3[0] = imgui.slider_float("Rot x", rot3[0], 0.0, np.pi*2)
-    edited, rot3[1] = imgui.slider_float("Rot Y", rot3[1], 0, np.pi*2)
-    edited, rot3[2] = imgui.slider_float("Rot Z", rot3[2], 0, np.pi*2)
-
-    # Rotacion de la esfera
-    edited, pos3[0] = imgui.slider_float("Pos x", pos3[0], -6.55, 6.55)
-    edited, pos3[1] = imgui.slider_float("Pos Y", pos3[1], -3.05, 3.05)
-
-    # Coeficiente de iluminacion ambiental
-    edited, la = imgui.color_edit3("la", la[0], la[1], la[2])
-    # Boton para reiniciar la iluminacion ambiental
-    if imgui.button("clean la"):
-        la = (1.0, 1.0, 1.0)
-    
-    # Coeficiente de iluminacion difusa
-    edited, ld = imgui.color_edit3("ld", ld[0], ld[1], ld[2])
-    # Boton para reiniciar la iluminacion difusa
-    if imgui.button("clean ld"):
-        ld = (1.0, 1.0, 1.0)
-
-    # Coeficiente de iluminacion especular
-    edited, ls = imgui.color_edit3("ls", ls[0], ls[1], ls[2])
-    # Boton para reiniciar la iluminacion especular
-    if imgui.button("clean ls"):
-        ls = (1.0, 1.0, 1.0)
-    # Coeficientes de atenuacion y shininess
-    edited, cte_at = imgui.slider_float("constant Att.", cte_at, 0.0001, 0.2)
-    edited, lnr_at = imgui.slider_float("linear Att.", lnr_at, 0.01, 0.1)
-    edited, qud_at = imgui.slider_float("quadratic Att.", qud_at, 0.005, 0.1)
-    edited, shininess = imgui.slider_float("shininess", shininess, 0.1, 200)
-
-    # close current window context
-    imgui.end()
-
-    # pass all drawing comands to the rendering pipeline
-    # and close frame context
-    imgui.render()
-    imgui.end_frame()
-
-    return locationZ, la, ld, ls, cte_at, lnr_at, qud_at, shininess, rot3, pos3
-
 
 if __name__ == "__main__":
     config = open(sys.argv[1],)
@@ -99,9 +39,8 @@ if __name__ == "__main__":
     # Different shader programs for different lighting strategies
     phongPipeline = ls.SimplePhongShaderProgram()
     phongTexPipeline = ls.SimpleTexturePhongShaderProgram() # Pipeline para dibujar texturas
-
-    # This shader program does not consider lighting
-    mvpPipeline = es.SimpleModelViewProjectionShaderProgram()
+    texPipeline = es.SimpleTextureTransformShaderProgram() # Pipeline para dibujar texturas
+    
 
     # Setting up the clear screen color
     glClearColor(0.85, 0.85, 0.85, 1.0)
@@ -111,41 +50,40 @@ if __name__ == "__main__":
     glEnable(GL_DEPTH_TEST)
 
     # Creating shapes on GPU memory
-    # gpuAxis = createGPUShape(mvpPipeline, bs.createAxis(4))
-
     scene = createScene(phongPipeline)
+    taco = createTaco(texPipeline)
     balls=[]
-    white_ball = Ball(phongTexPipeline, [0,0], [0,0])
+    white_ball = Ball(phongTexPipeline, phongPipeline, [0,0], [0,0])
     balls.append(white_ball)
-    ball1 = Ball(phongTexPipeline, [2,0], [0,0], str(1))
+    ball1 = Ball(phongTexPipeline, phongPipeline, [2,0], [0,0], str(1))
     balls.append(ball1)
-    ball2 = Ball(phongTexPipeline, [2.35,-0.2], [0,0], str(2))
+    ball2 = Ball(phongTexPipeline, phongPipeline, [2.35,-0.2], [0,0], str(2))
     balls.append(ball2)
-    ball3 = Ball(phongTexPipeline, [2.35,0.2], [0,0], str(3))
+    ball3 = Ball(phongTexPipeline, phongPipeline, [2.35,0.2], [0,0], str(3))
     balls.append(ball3)
-    ball4 = Ball(phongTexPipeline, [2.7,-0.4], [0,0], str(4))
+    ball4 = Ball(phongTexPipeline, phongPipeline, [2.7,-0.4], [0,0], str(4))
     balls.append(ball4)
-    ball5 = Ball(phongTexPipeline, [3.05,-0.2], [0,0], str(5))
+    ball5 = Ball(phongTexPipeline, phongPipeline, [3.05,-0.2], [0,0], str(5))
     balls.append(ball5)
-    ball6 = Ball(phongTexPipeline, [2.7,0.4], [0,0], str(6))
+    ball6 = Ball(phongTexPipeline, phongPipeline, [2.7,0.4], [0,0], str(6))
     balls.append(ball6)
-    ball7 = Ball(phongTexPipeline, [3.05,-0.6], [0,0], str(7))
+    ball7 = Ball(phongTexPipeline, phongPipeline, [3.05,-0.6], [0,0], str(7))
     balls.append(ball7)
-    ball8 = Ball(phongTexPipeline, [2.7,0], [0,0], str(8))
+    ball8 = Ball(phongTexPipeline, phongPipeline, [2.7,0], [0,0], str(8))
     balls.append(ball8)
-    ball9 = Ball(phongTexPipeline, [3.05,0.2], [0,0], str(9))
+    ball9 = Ball(phongTexPipeline, phongPipeline, [3.05,0.2], [0,0], str(9))
     balls.append(ball9)
-    ball10 = Ball(phongTexPipeline, [3.05,0.6], [0,0], str(10))
+    ball10 = Ball(phongTexPipeline, phongPipeline, [3.05,0.6], [0,0], str(10))
     balls.append(ball10)
-    ball11 = Ball(phongTexPipeline, [3.4,-0.8], [0,0], str(11))
+    ball11 = Ball(phongTexPipeline, phongPipeline, [3.4,-0.8], [0,0], str(11))
     balls.append(ball11)
-    ball12 = Ball(phongTexPipeline, [3.4,-0.4], [0,0], str(12))
+    ball12 = Ball(phongTexPipeline, phongPipeline, [3.4,-0.4], [0,0], str(12))
     balls.append(ball12)
-    ball13 = Ball(phongTexPipeline, [3.4,0], [0,0], str(13))
+    ball13 = Ball(phongTexPipeline, phongPipeline, [3.4,0], [0,0], str(13))
     balls.append(ball13)
-    ball14 = Ball(phongTexPipeline, [3.4,0.4], [0,0], str(14))
+    ball14 = Ball(phongTexPipeline, phongPipeline, [3.4,0.4], [0,0], str(14))
     balls.append(ball14)
-    ball15 = Ball(phongTexPipeline, [3.4,0.8], [0,0], str(15))
+    ball15 = Ball(phongTexPipeline, phongPipeline, [3.4,0.8], [0,0], str(15))
     balls.append(ball15)
 
 
@@ -154,11 +92,6 @@ if __name__ == "__main__":
     glfw.swap_interval(0)
     t0 = glfw.get_time()
 
-    # initilize imgui context (see documentation)
-    imgui.create_context()
-    impl = GlfwRenderer(window)
-    
-    # IMPORTANTE!! si usa imgui debe conectar los input con on_key despues de inicializar imgui, de lo contrario no funcionan los input 
     # Se instancia un controller
     controller = Controller()
     actualBall=0
@@ -167,7 +100,7 @@ if __name__ == "__main__":
     glfw.set_key_callback(window, controller.on_key)
 
     # valores que controla el menu de imgui
-    locationZ = 2.3 
+    locationZ = 3
     la = [1.0, 1.0, 1.0] 
     ld = [1.0, 1.0, 1.0] 
     ls = [1.0, 1.0, 1.0]
@@ -185,9 +118,6 @@ if __name__ == "__main__":
         delta = t1 -t0
         t0 = t1
 
-        
-        impl.process_inputs()
-        # Using GLFW to check for input events
         glfw.poll_events()
 
         if not controller.targetBall.state:
@@ -202,7 +132,10 @@ if __name__ == "__main__":
             actualBall=(actualBall+1)%len(balls)
             controller.set_target_ball(balls[actualBall], 2)
 
-        center_pos = controller.targetBall.position
+        if controller.upCam:
+            center_pos = [0, 0]
+        else:
+            center_pos = controller.targetBall.position
         controller.update_center(center_pos)
 
         controller.update_camera(delta)
@@ -217,15 +150,10 @@ if __name__ == "__main__":
         # Clearing the screen in both, color and depth
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT)
 
-         # imgui function
 
-        locationZ, la, ld, ls, cte_at, lnr_at, qud_at, shininess, rot, pos = \
-            transformGuiOverlay(locationZ, la, ld, ls, cte_at, lnr_at, qud_at, shininess, rot, pos)
-
-
-##############################################################################
         if controller.is_z_pressed:
             controller.update_ball_velocity([(center[0]-eye[0])*2, (center[1]-eye[1])*2])
+
 
         #
         acceleration = np.array([0.0, 0.0], dtype=np.float32)
@@ -258,8 +186,7 @@ if __name__ == "__main__":
             for j in range(i+1, len(balls)):
                 if areColliding(balls[i], balls[j]):
                     collide(balls[i], balls[j], restCoef)
-                    print("colliding:" + str(i) + "->" + str(j))
-##############################################################################
+                    # print("colliding:" + str(i) + "->" + str(j))
 
 
 
@@ -321,27 +248,35 @@ if __name__ == "__main__":
 
         glUniformMatrix4fv(glGetUniformLocation(phongTexPipeline.shaderProgram, "projection"), 1, GL_TRUE, projection)
         glUniformMatrix4fv(glGetUniformLocation(phongTexPipeline.shaderProgram, "view"), 1, GL_TRUE, viewMatrix)
-
-        # sg.findNode(white_ball.gpuNode, "rot").transform = tr.matmul([tr.rotationZ(rot[2]),tr.rotationY(rot[1]),tr.rotationX(rot[0])])
-        # sg.findNode(white_ball.gpuNode, "sphere").transform = tr.matmul([tr.translate(pos[0], pos[1], pos[2]), tr.scale(0.4,0.4,0.4)])
-        # sg.drawSceneGraphNode(white_ball.gpuNode, phongTexPipeline, "model")
-
+        
+        count = 0
         for b in balls:
             b.update()
             sg.drawSceneGraphNode(b.gpuNode, phongTexPipeline, "model")
+            if b.velocity[0] == 0 and b.velocity[1] == 0:
+                count +=1
+        
+        if count == len(balls):
+            controller.mooving = False
+
+        glUseProgram(phongPipeline.shaderProgram)
+        for b in balls:
+            sg.drawSceneGraphNode(b.shadow, phongPipeline, "model")
+
+        if not controller.upCam:
+            glUseProgram(texPipeline.shaderProgram)
+            sg.drawSceneGraphNode(taco, texPipeline, "transform")
         
         # Drawing the imgui texture over our drawing
         glPolygonMode(GL_FRONT_AND_BACK, GL_FILL)
-        impl.render(imgui.get_draw_data())
 
         # Once the drawing is rendered, buffers are swap so an uncomplete drawing is never seen.
         glfw.swap_buffers(window)
 
-    #gpuAxis.clear()
-    impl.shutdown()
     scene.clear()
-    #white_ball.clear()
+    taco.clear()
     for b in balls:
         b.gpuNode.clear()
+        b.shadow.clear()
 
     glfw.terminate()
