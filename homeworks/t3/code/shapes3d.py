@@ -226,54 +226,6 @@ def createScene(pipeline):
 
     return trSceneNode
 
-def createCube1(pipeline):
-    # Funcion para crear Grafo de un objeto de la escena, se separa en otro grafo, por si se quiere dibujar con otro material
-    gpuGrayCube = createGPUShape(pipeline, bs.createColorNormalsCube(0.5, 0.5, 0.5)) # Shape del cubo gris
-
-    # Nodo del cubo gris
-    grayCubeNode = sg.SceneGraphNode("grayCube")
-    grayCubeNode.childs = [gpuGrayCube]
-
-    # Nodo del cubo escalado 
-    objectNode = sg.SceneGraphNode("object1")
-    objectNode.transform = tr.matmul([
-        tr.translate(0.25,-0.15,-0.25),
-        tr.rotationZ(np.pi*0.15),
-        tr.scale(0.2,0.2,0.5)
-    ])
-    objectNode.childs = [grayCubeNode]
-
-    # Nodo del del objeto escalado con el mismo valor de la escena base
-    scaledObject = sg.SceneGraphNode("object1")
-    scaledObject.transform = tr.scale(5, 5, 5)
-    scaledObject.childs = [objectNode]
-
-    return scaledObject
-
-def createCube2(pipeline):
-    # Funcion para crear Grafo de un objeto de la escena, se separa en otro grafo, por si se quiere dibujar con otro material
-    gpuGrayCube = createGPUShape(pipeline, bs.createColorNormalsCube(0.5, 0.5, 0.5)) # Shape del cubo gris
-
-    # Nodo del cubo gris
-    grayCubeNode = sg.SceneGraphNode("grayCube")
-    grayCubeNode.childs = [gpuGrayCube]
-
-    # Nodo del cubo escalado 
-    objectNode = sg.SceneGraphNode("object1")
-    objectNode.transform = tr.matmul([
-        tr.translate(-0.25,-0.15,-0.35),
-        tr.rotationZ(np.pi*-0.2),
-        tr.scale(0.3,0.3,0.3)
-    ])
-    objectNode.childs = [grayCubeNode]
-
-    # Nodo del del objeto escalado con el mismo valor de la escena base
-    scaledObject = sg.SceneGraphNode("object1")
-    scaledObject.transform = tr.scale(5, 5, 5)
-    scaledObject.childs = [objectNode]
-
-    return scaledObject
-
 def createColorNormalSphere(N, r, g, b):
     # Funcion para crear una esfera con normales
 

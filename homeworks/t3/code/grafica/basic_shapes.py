@@ -45,48 +45,6 @@ def scaleVertices(shape, stride, scaleFactor):
         shape.vertices[index + 2] *= scaleFactor[2]
 
 
-def createAxis(length=1.0):
-
-    # Defining the location and colors of each vertex  of the shape
-    vertices = [
-    #    positions        colors
-        -length,  0.0,  0.0, 0.0, 0.0, 0.0,
-         length,  0.0,  0.0, 1.0, 0.0, 0.0,
-
-         0.0, -length,  0.0, 0.0, 0.0, 0.0,
-         0.0,  length,  0.0, 0.0, 1.0, 0.0,
-
-         0.0,  0.0, -length, 0.0, 0.0, 0.0,
-         0.0,  0.0,  length, 0.0, 0.0, 1.0]
-
-    # This shape is meant to be drawn with GL_LINES,
-    # i.e. every 2 indices, we have 1 line.
-    indices = [
-         0, 1,
-         2, 3,
-         4, 5]
-
-    return Shape(vertices, indices)
-
-
-def createColorQuad(r, g, b):
-
-    # Defining locations and colors for each vertex of the shape    
-    vertices = [
-    #   positions        colors
-        -0.5, -0.5, 0.0,  r, g, b,
-         0.5, -0.5, 0.0,  r, g, b,
-         0.5,  0.5, 0.0,  r, g, b,
-        -0.5,  0.5, 0.0,  r, g, b]
-
-    # Defining connections among vertices
-    # We have a triangle every 3 indices specified
-    indices = [
-         0, 1, 2,
-         2, 3, 0]
-
-    return Shape(vertices, indices)
-
 
 def createTextureQuad(nx, ny):
 

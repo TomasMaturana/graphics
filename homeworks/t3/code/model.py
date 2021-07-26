@@ -8,8 +8,6 @@ import grafica.easy_shaders as es
 import grafica.performance_monitor as pm
 import grafica.lighting_shaders as ls
 import grafica.scene_graph as sg
-# import random
-# import grafica.transformations as tr
 from shapes3d import *
 
 import imgui

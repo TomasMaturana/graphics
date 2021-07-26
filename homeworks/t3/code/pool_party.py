@@ -120,6 +120,10 @@ if __name__ == "__main__":
 
         glfw.poll_events()
 
+        if len(balls)==0:
+            glfw.set_window_should_close(window, True)
+            break
+
         if not controller.targetBall.state:
             actualBall=(actualBall)%len(balls)
             controller.set_target_ball(balls[actualBall])
